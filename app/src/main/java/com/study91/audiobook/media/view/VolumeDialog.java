@@ -18,7 +18,7 @@ import com.study91.audiobook.R;
 import com.study91.audiobook.dict.SoundType;
 import com.study91.audiobook.media.IBookMediaPlayer;
 import com.study91.audiobook.media.MediaService;
-import com.study91.audiobook.system.IConfig1;
+import com.study91.audiobook.system.IUser;
 import com.study91.audiobook.system.SystemManager;
 
 /**
@@ -72,7 +72,7 @@ class VolumeDialog extends Dialog {
         ui.audioVolumeSeekBar = (SeekBar) findViewById(R.id.audioVolumeSeekBar);
         ui.audioVolumeSeekBar.setOnSeekBarChangeListener(new OnAudioVolumeSeekBarChangeListener());
 
-        int audioVolume = (int)(getConfig().getAudioVolume() * 100); //获取语音音量
+        int audioVolume = (int)(getUser().getAudioVolume() * 100); //获取语音音量
         ui.audioVolumeSeekBar.setProgress(audioVolume); //设置语音进度条
         ui.audioVolumeTextView.setText(audioVolume + ""); //设置语音进度文本
 
@@ -82,7 +82,7 @@ class VolumeDialog extends Dialog {
         ui.musicVolumeSeekBar = (SeekBar) findViewById(R.id.musicVolumeSeekBar);
         ui.musicVolumeSeekBar.setOnSeekBarChangeListener(new OnMusicVolumeSeekBarChangeListener());
 
-        int musicVolume = (int)(getConfig().getMusicVolume() * 100); //获取背景音乐音量
+        int musicVolume = (int)(getUser().getMusicVolume() * 100); //获取背景音乐音量
         ui.musicVolumeSeekBar.setProgress(musicVolume); //设置背景音乐进度条
         ui.musicVolumeTextView.setText(musicVolume + ""); //设置背景音乐进度文本
 
@@ -96,7 +96,7 @@ class VolumeDialog extends Dialog {
 
     @Override
     protected void onStop() {
-        if(hasChanged()) getConfig().update(); //更新配置
+        if(hasChanged()) getUser().update(); //更新配置
         unbindMediaService(); //取消媒体服务绑定
         super.onStop();
     }
@@ -142,11 +142,11 @@ class VolumeDialog extends Dialog {
     }
 
     /**
-     * 获取全局配置
-     * @return 全局配置
+     * 获取全局用户
+     * @return 全局用户
      */
-    private IConfig1 getConfig() {
-        return SystemManager.getSystemConfig(getContext());
+    private IUser getUser() {
+        return SystemManager.getUser(getContext());
     }
 
     /**
@@ -165,7 +165,7 @@ class VolumeDialog extends Dialog {
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             float volume = ((float)ui.audioVolumeSeekBar.getProgress()) / 100; //获取进度条语音音量值
             getMediaPlayer().setAudioVolume(volume); //设置媒体播放器语音音量
-            getConfig().setAudioVolume(volume); //设置全局配置语音音量
+            getUser().setAudioVolume(volume); //设置全局配置语音音量
 
             //刷新语音音量值
             int audioVolume = (int)(volume * 100);
@@ -189,7 +189,7 @@ class VolumeDialog extends Dialog {
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             float volume = ((float)ui.musicVolumeSeekBar.getProgress()) / 100; //获取进度条背景音乐音量值
             getMediaPlayer().setMusicVolume(volume); //设置媒体播放器背景音乐音量
-            getConfig().setMusicVolume(volume); //设置全局配置背景音乐音量
+            getUser().setMusicVolume(volume); //设置全局配置背景音乐音量
 
             //刷新背景音乐音量值
             int musicVolume = (int)(volume * 100);

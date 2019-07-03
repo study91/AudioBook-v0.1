@@ -14,7 +14,6 @@ import com.study91.audiobook.dict.IDict;
 import com.study91.audiobook.dict.LinkMode;
 import com.study91.audiobook.dict.SoundType;
 import com.study91.audiobook.system.IConfig;
-import com.study91.audiobook.system.IConfig1;
 import com.study91.audiobook.system.SystemManager;
 import com.study91.audiobook.tools.ImageTools;
 
@@ -135,7 +134,7 @@ class Book implements IBook {
             IData data = null; //数据对象
 
             try {
-                IConfig1 config = SystemManager.getSystemConfig(getContext()); //获取系统配置
+                IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
                 data = DataManager.createData(config.getBookDataSource()); //创建数据对象
 
                 //更新数据库
@@ -155,7 +154,7 @@ class Book implements IBook {
             Cursor cursor = null; //数据指针
 
             try {
-                IConfig1 config = SystemManager.getSystemConfig(getContext()); //获取系统配置
+                IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
                 data = DataManager.createData(config.getBookDataSource()); //创建数据对象
 
                 ///查询当前语音目录是否存在
@@ -207,7 +206,7 @@ class Book implements IBook {
             IData data = null; //数据对象
 
             try {
-                IConfig1 config = SystemManager.getSystemConfig(getContext()); //获取全局配置
+                IConfig config = SystemManager.getConfig(getContext()); //获取全局配置
                 data = DataManager.createData(config.getBookDataSource()); //创建数据对象
 
                 //更新数据库

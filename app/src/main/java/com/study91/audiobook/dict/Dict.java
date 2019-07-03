@@ -5,7 +5,7 @@ import android.database.Cursor;
 
 import com.study91.audiobook.data.DataManager;
 import com.study91.audiobook.data.IData;
-import com.study91.audiobook.system.IConfig1;
+import com.study91.audiobook.system.IConfig;
 import com.study91.audiobook.system.SystemManager;
 
 /**
@@ -30,7 +30,7 @@ class Dict implements IDict {
         Cursor cursor = null; //数据指针
 
         try {
-            IConfig1 config = SystemManager.getSystemConfig(getContext()); //获取系统配置
+            IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
             data = DataManager.createData(config.getBookDataSource()); //数据对象
 
             //查询字符串

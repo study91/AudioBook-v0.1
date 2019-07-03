@@ -6,8 +6,6 @@ import android.content.Context;
  * 系统管理器
  */
 public class SystemManager {
-    private static IConfig1 systemConfig; //系统配置
-
     private static IConfig config; //全局配置
     private static IUser user; //全局用户
 
@@ -39,21 +37,8 @@ public class SystemManager {
     }
 
     /**
-     * 获取系统配置
-     * @param context 应用程序上下文
-     * @return 系统配置
-     */
-    public static IConfig1 getSystemConfig(Context context) {
-        if (systemConfig == null) {
-            systemConfig = new Config1(context);
-        }
-
-        return systemConfig;
-    }
-
-    /**
-     * 创建权限
-     * @return 权限
+     * 创建权限对象
+     * @return 权限对象
      */
     public static IPermission createPermission() {
         return new Permission();

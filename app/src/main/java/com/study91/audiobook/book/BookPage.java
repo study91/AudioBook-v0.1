@@ -6,7 +6,7 @@ import android.graphics.drawable.Drawable;
 
 import com.study91.audiobook.data.DataManager;
 import com.study91.audiobook.data.IData;
-import com.study91.audiobook.system.IConfig1;
+import com.study91.audiobook.system.IConfig;
 import com.study91.audiobook.system.SystemManager;
 import com.study91.audiobook.tools.ImageTools;
 import com.study91.audiobook.tools.MediaTools;
@@ -132,7 +132,7 @@ class BookPage implements IBookPage {
         Cursor cursor = null; //数据指针
 
         try {
-            IConfig1 config = SystemManager.getSystemConfig(getContext()); //获取系统配置
+            IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
             data = DataManager.createData(config.getBookDataSource()); //创建数据对象
 
             //查询字符串
