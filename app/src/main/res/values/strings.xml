@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">听读学习机</string>
+    <string name="config_filename">study91/config/book.properties</string> <!-- 配置文件 -->
+    <string name="book_file_path">study91/book/</string> <!-- 有声书文件路径 -->
+    <string name="audio_path">study91/book/[PACKAGE]/audio/</string> <!-- 语音文件路径 -->
+    <string name="icon_path">study91/book/[PACKAGE]/icon/</string> <!-- 图标文件路径 -->
+    <string name="image_path">study91/book/[PACKAGE]/image/</string> <!-- 图片文件路径 -->
+    <string name="dialog_volume_title">设置音量</string> <!-- 音量设置标题 -->
+
+    <string name="permission_dialog_message">亲爱的用户\n\n本软件需要您授予以下权限才能正常使用，请允许以下权限：\n\n[PERMISSION_NAMES]\n请到“应用信息 -> 权限” 中授予权限！</string>
+    <string name="permission_dialog_positive_button">立即手动授权</string>
+    <string name="permission_dialog_negative_button">取消</string>
+    <string name="permission_warning">请给软件授予必须的权限，否则软件不能正常使用。</string>
+</resources>

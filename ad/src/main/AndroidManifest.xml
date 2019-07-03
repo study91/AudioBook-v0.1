@@ -1,0 +1,17 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.study91.ad" >
+    <!-- AdView SDK mandatory or important permissions -->
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- 允许访问网络，这是必须的 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- 允许访问网络的状态，这是必须的 -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" /> <!-- 允许访问手机的各种状态，这是必须的 -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- 允许一个程序访问CellID或WiFi热点来获取粗略的位置 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- 允许一个程序访问精确位置(如GPS) -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /> <!-- 允许程序访问Wi-Fi网络状态信息 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- 允许程序访问外部存储设备，可以缓存广告 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> <!-- 允许程序访问外部存储设备 -->
+
+    <application>
+        <activity android:name="com.kyview.AdviewWebView" />
+        <service android:name="com.kyview.DownloadService" />
+    </application>
+</manifest>
