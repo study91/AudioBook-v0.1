@@ -48,6 +48,14 @@ public class BookImageViewPager extends ViewPager {
     }
 
     /**
+     * 获取单击事件监听器
+     * @return 单击事件监听器
+     */
+    private OnSingleTapListener getOnSingleTapListener() {
+        return m.onSingleTapListener;
+    }
+
+    /**
      * 初始化
      */
     private void init() {
@@ -94,11 +102,12 @@ public class BookImageViewPager extends ViewPager {
             imageView.setOnSingleTapListener(new OnSingleTapListener() {
                 @Override
                 public void onSingleTap() {
-                    if (m.onSingleTapListener != null) {
-                        m.onSingleTapListener.onSingleTap();
+                    if (getOnSingleTapListener() != null) {
+                        getOnSingleTapListener().onSingleTap();
                     }
                 }
             });
+            
             container.addView(imageView);
 
             return imageView;
