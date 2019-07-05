@@ -73,7 +73,7 @@ class User implements IUser {
                     }
                 }
 
-                m.currentBook = BookManager.getBook(getContext(), m.currentBookID);
+                m.currentBook = BookManager.createBook(getContext(), m.currentBookID);
             } finally {
                 if(cursor != null) cursor.close(); //关闭数据指针
                 if(data != null) data.close(); //关闭数据对象

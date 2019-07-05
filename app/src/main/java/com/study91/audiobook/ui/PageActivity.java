@@ -3,16 +3,20 @@ package com.study91.audiobook.ui;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
 import com.study91.audiobook.R;
 import com.study91.audiobook.book.view.BookImageViewPager;
+import com.study91.audiobook.book.view.OnSingleTapListener;
+import com.study91.audiobook.media.view.MediaPlayerView;
 
 /**
  * 页窗口
  */
 public class PageActivity extends Activity {
+    private Field m = new Field(); //私有字段
     private UI ui = new UI(); //私有界面
 
     @Override
@@ -26,8 +30,52 @@ public class PageActivity extends Activity {
 
         ui.fullLayout = (RelativeLayout) findViewById(R.id.fullLayout);
         ui.fullLayout.removeAllViews();
-        BookImageViewPager pageImageViewPager = new BookImageViewPager(this);
-        ui.fullLayout.addView(pageImageViewPager);
+
+        ui.mediaPlayerView = (MediaPlayerView) findViewById(R.id.mediaPlayerView);
+
+        ui.bookImageViewPager = new BookImageViewPager(this);
+        ui.bookImageViewPager.setOnSingleTapListener(new OnSingleTapListener() {
+            @Override
+            public void onSingleTap() {
+                setToolbar(!hasToolbar());
+            }
+        });
+
+        ui.fullLayout.addView(ui.bookImageViewPager);
+    }
+
+    /**
+     * 是否有工具条
+     * @return true=有工具条，false=没有工具条
+     */
+    private boolean hasToolbar() {
+        return m.hasToolbar;
+    }
+
+    /**
+     * 设置工具条
+     * @param hasToolbar ture=显示工具条，false=隐藏工具条
+     */
+    private void setToolbar(boolean hasToolbar) {
+        if (hasToolbar) {
+            //显示工具条
+            ui.mediaPlayerView.setVisibility(View.VISIBLE); //显示媒体播放工具条
+        } else {
+            //隐藏工具条
+            ui.mediaPlayerView.setVisibility(View.GONE); //隐藏媒体播放工具条
+        }
+
+        m.hasToolbar = hasToolbar; //缓存工具条状态
+    }
+
+    /**
+     * 私有字段类
+     */
+    private class Field {
+        /**
+         * 是否有工具条
+         */
+        boolean hasToolbar = true;
     }
 
     /**
@@ -38,5 +86,15 @@ public class PageActivity extends Activity {
          * 全屏布局
          */
         RelativeLayout fullLayout;
+
+        /**
+         * 书图片视图页
+         */
+        BookImageViewPager bookImageViewPager;
+
+        /**
+         * 媒体播放器视图
+         */
+        MediaPlayerView mediaPlayerView;
     }
 }

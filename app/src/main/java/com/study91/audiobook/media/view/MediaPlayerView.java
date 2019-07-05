@@ -22,7 +22,7 @@ import com.study91.audiobook.media.IBookMediaPlayer;
 import com.study91.audiobook.media.MediaService;
 import com.study91.audiobook.tools.MediaTools;
 
-class MediaPlayerView extends RelativeLayout {
+public class MediaPlayerView extends RelativeLayout {
     private UI ui = new UI(); //界面
     private Field m = new Field(); //私有字段
 

@@ -18,6 +18,8 @@ import com.study91.audiobook.system.SystemManager;
  * 书图片视图页
  */
 public class BookImageViewPager extends ViewPager {
+    private Field m = new Field(); //私有字段
+
     /**
      * 构造器
      * @param context 应用程序上下文
@@ -42,9 +44,7 @@ public class BookImageViewPager extends ViewPager {
      * @param listener 单击事件监听器
      */
     public void setOnSingleTapListener(OnSingleTapListener listener) {
-        if (listener != null) {
-            listener.onSingleTap();
-        }
+        m.onSingleTapListener = listener;
     }
 
     /**
@@ -61,8 +61,7 @@ public class BookImageViewPager extends ViewPager {
 
             @Override
             public void onPageSelected(int position) {
-//                IBook book = BookManager.getCurrentBook(getContext());
-//                IBookPage page = book.getPages().get(position);
+
             }
 
             @Override
@@ -70,14 +69,15 @@ public class BookImageViewPager extends ViewPager {
 
             }
         });
-
-        //setCurrentItem(0);
     }
 
+    /**
+     * 获取当前打开的书
+     * @return 当前打开的书
+     */
     private IBook getBook() {
         IUser user = SystemManager.getUser(getContext()); //获取全局用户
-        IBook book = user.getCurrentBook(); //获取用户当前打开的书
-        return book;
+        return user.getCurrentBook();
     }
 
     /**
@@ -89,12 +89,16 @@ public class BookImageViewPager extends ViewPager {
         public Object instantiateItem(@NonNull ViewGroup container, int position) {
             IBookPage page = getBook().getPages().get(position); //获取当前显示页
 
-//            ImageView imageView = new ImageView(getContext());
-//            imageView.setScaleType(ImageView.ScaleType.FIT_XY);
-//            imageView.setImageDrawable(page.getImageDrawable());
-//            container.addView(imageView);
             ZoomImageView imageView = new ZoomImageView(getContext());
             imageView.setImageDrawable(page.getImageDrawable());
+            imageView.setOnSingleTapListener(new OnSingleTapListener() {
+                @Override
+                public void onSingleTap() {
+                    if (m.onSingleTapListener != null) {
+                        m.onSingleTapListener.onSingleTap();
+                    }
+                }
+            });
             container.addView(imageView);
 
             return imageView;
@@ -114,5 +118,15 @@ public class BookImageViewPager extends ViewPager {
         public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
             return view == object;
         }
+    }
+
+    /**
+     * 私有字段类
+     */
+    private class Field {
+        /**
+         * 单击事件监听器
+         */
+        OnSingleTapListener onSingleTapListener;
     }
 }

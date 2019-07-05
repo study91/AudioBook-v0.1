@@ -169,7 +169,7 @@ class Book implements IBook {
 
                 if (cursor.getCount() == 1) {
                     //当前语音目录存在
-                    m.currentAudio = BookManager.getCatalog(getContext(), getBookID(), m.currentAudioIndex);
+                    m.currentAudio = BookManager.createCatalog(getContext(), getBookID(), m.currentAudioIndex);
                 } else {
                     //当前语音目录不存在，将第一个有效的语音目录设置为当前语音目录
                     sql = "SELECT [Index] FROM [BookCatalog] " +
@@ -186,7 +186,7 @@ class Book implements IBook {
                         //设置当前语音
                         int index = cursor.getInt(cursor.getColumnIndex("Index")); //目录索引
                         setCurrentAudio(index);
-                        m.currentAudio = BookManager.getCatalog(getContext(), getBookID(), index);
+                        m.currentAudio = BookManager.createCatalog(getContext(), getBookID(), index);
                     }
                 }
             } finally {
@@ -241,7 +241,7 @@ class Book implements IBook {
 
                 if (cursor.getCount() == 1) {
                     //页存在
-                    m.currentPage = BookManager.getPage(getContext(), getBookID(), m.currentPageNumber);
+                    m.currentPage = BookManager.createPage(getContext(), getBookID(), m.currentPageNumber);
                 } else {
                     //页不存在，将第一页设置为当前显示页
                     sql = "SELECT [PageNumber] FROM [BookPage] " +
@@ -257,7 +257,7 @@ class Book implements IBook {
                         //设置当前显示页
                         int pageNumber = cursor.getInt(cursor.getColumnIndex("PageNumber")); //当前显示页
                         setCurrentPage(pageNumber);
-                        m.currentPage = BookManager.getPage(getContext(), getBookID(), pageNumber);
+                        m.currentPage = BookManager.createPage(getContext(), getBookID(), pageNumber);
                     }
                 }
             } finally {
@@ -362,7 +362,7 @@ class Book implements IBook {
                     //遍历目录并添加到目录列表
                     for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                         int index = cursor.getInt(cursor.getColumnIndex("Index")); //目录索引
-                        IBookCatalog catalog = BookManager.getCatalog(getContext(), getBookID(), index); //创建目录
+                        IBookCatalog catalog = BookManager.createCatalog(getContext(), getBookID(), index); //创建目录
                         m.catalogs.add(catalog); //添加到集合
                     }
                 }
@@ -397,7 +397,7 @@ class Book implements IBook {
                     //遍历页并添加到页列表
                     for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                         int pageNumber = cursor.getInt(cursor.getColumnIndex("PageNumber")); //页
-                        IBookPage page = BookManager.getPage(getContext(), getBookID(), pageNumber); //创建页
+                        IBookPage page = BookManager.createPage(getContext(), getBookID(), pageNumber); //创建页
                         m.pages.add(page); //添加到集合
                     }
                 }

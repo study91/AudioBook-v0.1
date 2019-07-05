@@ -36,7 +36,7 @@ class BookPage implements IBookPage {
     @Override
     public IBook getBook() {
         if (m.book == null) {
-            m.book = BookManager.getBook(getContext(), getBookID());
+            m.book = BookManager.createBook(getContext(), getBookID());
         }
 
         return m.book;
