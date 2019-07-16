@@ -13,6 +13,31 @@
         android:layout_height="match_parent">
     </RelativeLayout>
 
+    <!-- 顶部布局 -->
+    <RelativeLayout
+        android:id="@+id/topLayout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/activity_top_height"
+        android:background="@drawable/toolbar_background">
+
+        <!-- 返回按钮 -->
+        <Button
+            android:id="@+id/backButton"
+            android:layout_width="@dimen/button_width"
+            android:layout_height="@dimen/button_height"
+            android:layout_centerVertical="true"
+            android:background="@drawable/button_back"/>
+
+        <!-- 播放按钮 -->
+        <Button
+            android:id="@+id/playButton"
+            android:layout_width="@dimen/button_width"
+            android:layout_height="@dimen/button_height"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/button_play" />
+    </RelativeLayout>
+
     <!-- 媒体播放器视图 -->
     <com.study91.audiobook.media.view.MediaPlayerView
         android:id="@+id/mediaPlayerView"

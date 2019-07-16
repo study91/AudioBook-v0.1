@@ -97,9 +97,11 @@ public class BookImageViewPager extends ViewPager {
         public Object instantiateItem(@NonNull ViewGroup container, int position) {
             IBookPage page = getBook().getPages().get(position); //获取当前显示页
 
-            ZoomImageView imageView = new ZoomImageView(getContext());
-            imageView.setImageDrawable(page.getImageDrawable());
-            imageView.setOnSingleTapListener(new OnSingleTapListener() {
+            ZoomImageView zoomImageView = new ZoomImageView(getContext()); //实例化图片缩放控件
+            zoomImageView.setImageDrawable(page.getImageDrawable()); //设置图片Drawable
+
+            //设置单击事件监听器
+            zoomImageView.setOnSingleTapListener(new OnSingleTapListener() {
                 @Override
                 public void onSingleTap() {
                     if (getOnSingleTapListener() != null) {
@@ -107,10 +109,10 @@ public class BookImageViewPager extends ViewPager {
                     }
                 }
             });
-            
-            container.addView(imageView);
 
-            return imageView;
+            container.addView(zoomImageView);
+
+            return zoomImageView;
         }
 
         @Override

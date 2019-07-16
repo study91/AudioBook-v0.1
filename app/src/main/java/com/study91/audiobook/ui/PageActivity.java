@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 
 import com.study91.audiobook.R;
@@ -15,7 +16,7 @@ import com.study91.audiobook.media.view.MediaPlayerView;
 /**
  * 页窗口
  */
-public class PageActivity extends Activity {
+public class PageActivity extends Activity implements View.OnClickListener {
     private Field m = new Field(); //私有字段
     private UI ui = new UI(); //私有界面
 
@@ -31,6 +32,9 @@ public class PageActivity extends Activity {
         ui.fullLayout = (RelativeLayout) findViewById(R.id.fullLayout);
         ui.fullLayout.removeAllViews();
 
+        ui.topLayout = (RelativeLayout) findViewById(R.id.topLayout);
+        ui.backButton = (Button) findViewById(R.id.backButton);
+
         ui.mediaPlayerView = (MediaPlayerView) findViewById(R.id.mediaPlayerView);
 
         ui.bookImageViewPager = new BookImageViewPager(this);
@@ -42,6 +46,17 @@ public class PageActivity extends Activity {
         });
 
         ui.fullLayout.addView(ui.bookImageViewPager);
+
+        ui.backButton.setOnClickListener(this); //设置单击事件监听器
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.backButton: //返回按钮
+                finish();
+                break;
+        }
     }
 
     /**
@@ -60,9 +75,11 @@ public class PageActivity extends Activity {
         if (hasToolbar) {
             //显示工具条
             ui.mediaPlayerView.setVisibility(View.VISIBLE); //显示媒体播放工具条
+            ui.topLayout.setVisibility(View.VISIBLE); //显示顶部工具条
         } else {
             //隐藏工具条
             ui.mediaPlayerView.setVisibility(View.GONE); //隐藏媒体播放工具条
+            ui.topLayout.setVisibility(View.GONE); //隐藏顶部工具条
         }
 
         m.hasToolbar = hasToolbar; //缓存工具条状态
@@ -86,6 +103,16 @@ public class PageActivity extends Activity {
          * 全屏布局
          */
         RelativeLayout fullLayout;
+
+        /**
+         * 顶部布局
+         */
+        RelativeLayout topLayout;
+
+        /**
+         * 返回按钮
+         */
+        Button backButton;
 
         /**
          * 书图片视图页
