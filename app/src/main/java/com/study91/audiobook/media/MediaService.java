@@ -63,6 +63,7 @@ public class MediaService extends Service {
                 currentAudio.getAudioFilename(),
                 currentAudio.getTitle(),
                 book.getIconFilename());
+        getMediaPlayer().setSoundType(book.getSoundType());
     }
 
     @Override

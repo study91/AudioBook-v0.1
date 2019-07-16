@@ -66,6 +66,7 @@ public class MainActivity extends Activity {
                         currentAudio.getAudioFilename(),
                         currentAudio.getTitle(),
                         book.getIconFilename());
+                getMediaPlayer().setSoundType(book.getSoundType());
 
                 Intent intent = new Intent(getApplicationContext(), PageActivity.class);
                 startActivity(intent);
@@ -87,6 +88,7 @@ public class MainActivity extends Activity {
                         currentAudio.getAudioFilename(),
                         currentAudio.getTitle(),
                         book.getIconFilename());
+                getMediaPlayer().setSoundType(book.getSoundType());
 
                 Intent intent = new Intent(getApplicationContext(), PageActivity.class);
                 startActivity(intent);
