@@ -109,6 +109,8 @@ public interface IBook {
      */
     IBookCatalog getCurrentAudio();
 
+
+
     /**
      * 设置当前显示页
      * @param pageNumber 页码
