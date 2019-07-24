@@ -3,6 +3,7 @@ package com.study91.audiobook.book;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 import com.study91.audiobook.R;
 import com.study91.audiobook.data.DataManager;
@@ -24,6 +25,7 @@ import java.util.List;
  * 书
  */
 class Book implements IBook {
+    private String TAG = "Book";
     private Field m = new Field(); //私有字段
 
     /**
@@ -127,72 +129,39 @@ class Book implements IBook {
     }
 
     @Override
-    public void setCurrentAudio(int index) {
-        if (index != m.currentAudioIndex) {
-            m.currentAudioIndex = index; //缓存当前页码
+    public void moveToNextAudio() {
+        IBookCatalog currentAudio = getCurrentAudio(); //获取当前语音
+        List<IBookCatalog> catalogs = getCatalogs(); //获取目录列表
 
-            IData data = null; //数据对象
+        //遍历所有目录，查找并设置下一个语音目录为当前目录
+        for (int i = 0; i < catalogs.size(); i++) {
+            IBookCatalog catalog = catalogs.get(i); //获取目录
 
-            try {
-                IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
-                data = DataManager.createData(config.getBookDataSource()); //创建数据对象
-
-                //更新数据库
-                String sql = "UPDATE [Book] SET [CurrentAudio] = " + m.currentAudioIndex + " " +
-                        "WHERE [BookID] = " + getBookID();
-                data.execute(sql); //执行更新
-            } finally {
-                if(data != null) data.close(); //关闭数据对象
+            //目录有语音、充许播放语音且目录索引大于当前语音索引时执行
+            if (catalog.hasAudio() &&
+                    catalog.allowPlayAudio() &&
+                    catalog.getIndex() > currentAudio.getIndex()) {
+                setCurrentAudio(catalog); //重置当前语音
+                break;
             }
         }
     }
 
     @Override
+    public void setCurrentAudio(IBookCatalog catalog) {
+        //当前语音索引不等于参数语音目录索引时执行
+        if (m.currentAudioIndex != catalog.getIndex()) {
+            m.currentAudioIndex = catalog.getIndex(); //缓存当前语音索引
+            updateCurrentAudio(catalog.getIndex()); //更新当前语音
+        }
+
+        m.currentAudio = catalog;
+    }
+
+    @Override
     public IBookCatalog getCurrentAudio() {
         if (m.currentAudio == null || m.currentAudioIndex != m.currentAudio.getIndex()) {
-            IData data = null; //数据对象
-            Cursor cursor = null; //数据指针
-
-            try {
-                IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
-                data = DataManager.createData(config.getBookDataSource()); //创建数据对象
-
-                ///查询当前语音目录是否存在
-                // 查询字符串
-                String sql = "SELECT [Index] FROM [BookCatalog] " +
-                        "WHERE " +
-                        "[BookID] = " + getBookID() + " AND " +
-                        "[Index] = " + m.currentAudioIndex + " AND " +
-                        "[HasAudio] = 1 AND [AllowPlayAudio] = 1";
-
-                cursor = data.query(sql);
-
-                if (cursor.getCount() == 1) {
-                    //当前语音目录存在
-                    m.currentAudio = BookManager.createCatalog(getContext(), getBookID(), m.currentAudioIndex);
-                } else {
-                    //当前语音目录不存在，将第一个有效的语音目录设置为当前语音目录
-                    sql = "SELECT [Index] FROM [BookCatalog] " +
-                            "WHERE " +
-                            "[BookID] = " + getBookID() + " AND " +
-                            "[HasAudio] = 1 AND [AllowPlayAudio] = 1 " +
-                            "ORDER BY [Index] LIMIT 1";
-
-                    cursor = data.query(sql);
-
-                    if (cursor.getCount() == 1) {
-                        cursor.moveToFirst();
-
-                        //设置当前语音
-                        int index = cursor.getInt(cursor.getColumnIndex("Index")); //目录索引
-                        setCurrentAudio(index);
-                        m.currentAudio = BookManager.createCatalog(getContext(), getBookID(), index);
-                    }
-                }
-            } finally {
-                if(cursor != null) cursor.close(); //关闭数据指针
-                if(data != null) data.close(); //关闭数据对象
-            }
+            checkCurrentAudio(); //检查当前语音
         }
 
         return m.currentAudio;
@@ -467,6 +436,53 @@ class Book implements IBook {
             }
         } finally {
             if(cursor != null) cursor.close(); //关闭数据指针
+            if(data != null) data.close(); //关闭数据对象
+        }
+    }
+
+    /**
+     * 检查当前语音
+     */
+    private void checkCurrentAudio() {
+        List<IBookCatalog> catalogs = getCatalogs(); //获取目录列表
+
+        //遍历检查所有目录
+        for (int i = 0; i < catalogs.size(); i++) {
+            IBookCatalog catalog = catalogs.get(i); //目录
+
+            if (catalog.getIndex() <= m.currentAudioIndex) {
+                //目录索引小于或等于当前语音目录索引时执行（表示当前语音目录存在）
+                if (catalog.hasAudio() && catalog.allowPlayAudio() &&
+                        catalog.getIndex() == m.currentAudioIndex) {
+                    setCurrentAudio(catalog); //设置当前语音目录
+                    break;
+                }
+            } else {
+                //目录索引大于当前语音目录索引时执行（表示当前语音目录不存在）
+                if (catalog.hasAudio() && catalog.allowPlayAudio()) {
+                    setCurrentAudio(catalog); //重置当前语音
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * 更新当前语音
+     * @param index 语音索引
+     */
+    private void updateCurrentAudio(int index) {
+        IData data = null; //数据对象
+
+        try {
+            IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
+            data = DataManager.createData(config.getBookDataSource()); //创建数据对象
+
+            //更新数据库
+            String sql = "UPDATE [Book] SET [CurrentAudio] = " + index + " " +
+                    "WHERE [BookID] = " + getBookID();
+            data.execute(sql); //执行更新
+        } finally {
             if(data != null) data.close(); //关闭数据对象
         }
     }

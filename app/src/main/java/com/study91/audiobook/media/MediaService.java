@@ -18,6 +18,7 @@ import android.support.v4.app.NotificationCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 
+import com.study91.audiobook.book.BookManager;
 import com.study91.audiobook.book.IBook;
 import com.study91.audiobook.book.IBookCatalog;
 import com.study91.audiobook.system.IUser;
@@ -92,8 +93,17 @@ public class MediaService extends Service {
             m.mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-//                    refresh(); //刷新
-//                    stopTimer(); //停止定时器
+                    stopTimer(); //停止定时器
+                    IBook currentBook = SystemManager.getUser(getApplicationContext()).getCurrentBook();
+                    currentBook.moveToNextAudio();
+                    IBookCatalog currentAudio = currentBook.getCurrentAudio();
+                    m.mediaPlayer.setAudioFile(
+                            currentAudio.getAudioFilename(),
+                            currentAudio.getTitle(),
+                            currentAudio.getIconFilename());
+                    m.mediaPlayer.play();
+                    refresh(); //刷新
+                    startTimer(); //启动定时器
                 }
             });
         }

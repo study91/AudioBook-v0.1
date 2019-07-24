@@ -98,18 +98,21 @@ public interface IBook {
     boolean syncEnable();
 
     /**
-     * 设置当前语音目录
-     * @param index 语音目录索引
+     * 移动到下一个语音目录
      */
-    void setCurrentAudio(int index);
+    void moveToNextAudio();
+
+    /**
+     * 设置当前语音目录
+     * @param catalog 语音目录
+     */
+    void setCurrentAudio(IBookCatalog catalog);
 
     /**
      * 获取当前语音目录
      * @return 当前语音目录
      */
     IBookCatalog getCurrentAudio();
-
-
 
     /**
      * 设置当前显示页

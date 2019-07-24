@@ -274,22 +274,6 @@ class BookMediaPlayer implements IBookMediaPlayer{
      * @param mp 媒体播放器
      */
     private void onMediaCompletion(MediaPlayer mp) {
-        //TODO 载入语音电子书时通过具体算法播放后续内容
-
-        mp.seekTo(0); //重新定位到媒体头部位置
-
-        if (isLooping()) {
-            //如果循环播放时执行
-            play();
-        } else {
-            //不循环播放时，如果有背景音乐，暂停音乐播放
-            if (getSoundType() == SoundType.AUDIO_AND_MUSIC) {
-                if (getMusicMediaPlayer().isPlaying()) {
-                    getMusicMediaPlayer().pause();
-                }
-            }
-        }
-
         if (m.completionListener != null) {
             m.completionListener.onCompletion(mp);
         }
