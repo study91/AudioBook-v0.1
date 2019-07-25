@@ -90,18 +90,26 @@ public class MediaService extends Service {
                 }
             });
 
+            //设置播放完成事件监听器
             m.mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
                     stopTimer(); //停止定时器
-                    IBook currentBook = SystemManager.getUser(getApplicationContext()).getCurrentBook();
-                    currentBook.moveToNextAudio();
-                    IBookCatalog currentAudio = currentBook.getCurrentAudio();
+
+                    //获取全局书
+                    IBook currentBook = SystemManager.getUser(
+                            getApplicationContext()).getCurrentBook();
+
+                    currentBook.moveToNextAudio(); //移动到下一个语音目录
+                    IBookCatalog currentAudio = currentBook.getCurrentAudio(); //获取当前语音
+
+                    //设置语音文件
                     m.mediaPlayer.setAudioFile(
                             currentAudio.getAudioFilename(),
                             currentAudio.getTitle(),
                             currentAudio.getIconFilename());
-                    m.mediaPlayer.play();
+
+                    m.mediaPlayer.play(); //播放
                     refresh(); //刷新
                     startTimer(); //启动定时器
                 }
