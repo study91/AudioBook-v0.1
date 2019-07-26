@@ -23,10 +23,14 @@
                 <action
                     android:name="android.intent.action.MAIN"
                     android:exported="true" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 目录活动 -->
+        <activity
+            android:name=".ui.CatalogActivity"
+            android:launchMode="singleTask" />
 
         <!-- 页活动 -->
         <activity

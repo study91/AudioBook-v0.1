@@ -1,17 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 页Activity -->
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
-    <!-- 全屏布局 -->
-    <RelativeLayout
-        android:id="@+id/fullLayout"
-        android:layout_above="@+id/adLayout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </RelativeLayout>
 
     <!-- 顶部布局 -->
     <RelativeLayout
@@ -28,24 +19,23 @@
             android:layout_centerVertical="true"
             android:background="@drawable/button_back"/>
 
-        <!-- 播放按钮 -->
+        <!-- 缩小字体 -->
         <Button
-            android:id="@+id/playButton"
-            android:layout_toLeftOf="@+id/catalogButton"
+            android:id="@+id/smallFontButton"
+            android:layout_toLeftOf="@+id/largeFontButton"
             android:layout_width="@dimen/button_width"
             android:layout_height="@dimen/button_height"
             android:layout_centerVertical="true"
-            android:background="@drawable/button_play" />
+            android:background="@drawable/button_font_small" />
 
-        <!-- 目录按钮 -->
+        <!-- 放大字体 -->
         <Button
-            android:id="@+id/catalogButton"
+            android:id="@+id/largeFontButton"
             android:layout_width="@dimen/button_width"
             android:layout_height="@dimen/button_height"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:background="@drawable/button_catalog"/>
-
+            android:background="@drawable/button_font_large"/>
     </RelativeLayout>
 
     <!-- 媒体播放器视图 -->

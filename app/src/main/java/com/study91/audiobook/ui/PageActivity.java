@@ -1,6 +1,7 @@
 package com.study91.audiobook.ui;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
@@ -14,7 +15,7 @@ import com.study91.audiobook.book.view.OnSingleTapListener;
 import com.study91.audiobook.media.view.MediaPlayerView;
 
 /**
- * 页窗口
+ * 页活动
  */
 public class PageActivity extends Activity implements View.OnClickListener {
     private Field m = new Field(); //私有字段
@@ -29,14 +30,29 @@ public class PageActivity extends Activity implements View.OnClickListener {
 
         setContentView(R.layout.activity_page);
 
+        //全屏布局
         ui.fullLayout = (RelativeLayout) findViewById(R.id.fullLayout);
         ui.fullLayout.removeAllViews();
 
+        //顶部布局
         ui.topLayout = (RelativeLayout) findViewById(R.id.topLayout);
-        ui.backButton = (Button) findViewById(R.id.backButton);
 
+        //返回按钮
+        ui.backButton = (Button) findViewById(R.id.backButton);
+        ui.backButton.setOnClickListener(this);
+
+        //播放按钮
+        ui.playButton = (Button) findViewById(R.id.playButton);
+        ui.playButton.setOnClickListener(this);
+
+        //目录按钮
+        ui.catalogButton = (Button) findViewById(R.id.catalogButton);
+        ui.catalogButton.setOnClickListener(this);
+
+        //媒体播放视图
         ui.mediaPlayerView = (MediaPlayerView) findViewById(R.id.mediaPlayerView);
 
+        //书图片视图页
         ui.bookImageViewPager = new BookImageViewPager(this);
         ui.bookImageViewPager.setOnSingleTapListener(new OnSingleTapListener() {
             @Override
@@ -46,8 +62,6 @@ public class PageActivity extends Activity implements View.OnClickListener {
         });
 
         ui.fullLayout.addView(ui.bookImageViewPager);
-
-        ui.backButton.setOnClickListener(this); //设置单击事件监听器
     }
 
     @Override
@@ -55,6 +69,12 @@ public class PageActivity extends Activity implements View.OnClickListener {
         switch (v.getId()) {
             case R.id.backButton: //返回按钮
                 finish();
+                break;
+            case R.id.playButton: //播放按钮
+                break;
+            case R.id.catalogButton: //目录按钮
+                Intent intent = new Intent(this, CatalogActivity.class);
+                startActivity(intent);
                 break;
         }
     }
@@ -113,6 +133,16 @@ public class PageActivity extends Activity implements View.OnClickListener {
          * 返回按钮
          */
         Button backButton;
+
+        /**
+         * 播放按钮
+         */
+        Button playButton;
+
+        /**
+         * 目录按钮
+         */
+        Button catalogButton;
 
         /**
          * 书图片视图页

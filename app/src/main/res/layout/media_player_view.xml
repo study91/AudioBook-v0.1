@@ -79,17 +79,18 @@
         <!-- 语音标题 -->
         <com.study91.audiobook.media.view.ScrollTextView
             android:id="@+id/audioTitleTextView"
-            android:layout_toRightOf="@+id/iconLayout"
-            android:layout_toLeftOf="@+id/mediaToolsLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:gravity="center_vertical"
-            android:singleLine="true"
+            android:layout_height="@dimen/media_player_icon_height"
+            android:layout_alignParentTop="true"
+            android:padding="3dp"
+            android:layout_toLeftOf="@+id/mediaToolsLayout"
+            android:layout_toRightOf="@+id/iconLayout"
             android:ellipsize="marquee"
+            android:gravity="center_vertical"
             android:marqueeRepeatLimit="marquee_forever"
+            android:singleLine="true"
             android:textColor="@drawable/hyperlink_white"
-            android:textSize="@dimen/media_player_font_size"/>
+            android:textSize="@dimen/media_player_font_size" />
 
         <!-- 媒体工具按钮布局 -->
         <LinearLayout
