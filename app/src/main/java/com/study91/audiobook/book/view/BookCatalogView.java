@@ -24,10 +24,11 @@ public class BookCatalogView extends RelativeLayout {
 
         //从布局文件中获取Layout
         LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        layoutInflater.inflate(R.layout.book_catalog_view, this);
+        layoutInflater.inflate(R.layout.catalog_view, this);
 
         ui.listView = (ExpandableListView) findViewById(R.id.catalogExpandableListView); //获取列表视图
         ui.listView.setGroupIndicator(null); //去掉默认的下拉箭头图标
+        ui.listView.setAdapter(new BookCatalogViewAdapter(getContext())); //设置适配器
     }
 
     /**

@@ -38,6 +38,15 @@
             android:background="@drawable/button_font_large"/>
     </RelativeLayout>
 
+    <!-- 目录视图 -->
+    <com.study91.audiobook.book.view.BookCatalogView
+        android:id="@+id/catalogView"
+        android:layout_below="@+id/topLayout"
+        android:layout_above="@+id/mediaPlayerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/layout_transparent" />
+
     <!-- 媒体播放器视图 -->
     <com.study91.audiobook.media.view.MediaPlayerView
         android:id="@+id/mediaPlayerView"
