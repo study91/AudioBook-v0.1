@@ -1,6 +1,7 @@
 package com.study91.audiobook.book.view;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.study91.audiobook.R;
+import com.study91.audiobook.book.IBook;
 import com.study91.audiobook.book.IBookCatalog;
 import com.study91.audiobook.system.SystemManager;
 
@@ -70,14 +72,42 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
         //载入列表组布局
         View view = LayoutInflater.from(getContext()).inflate(R.layout.catalog_group_view, parent, false);
 
-        IBookCatalog catalog = getCatalogs().get(groupPosition); //获取书目录
+        IBook book = SystemManager.getUser(getContext()).getCurrentBook(); //全局书
+        List<IBookCatalog> catalogs = book.getCatalogs(); //目录集合
+        IBookCatalog catalog = catalogs.get(groupPosition); //目录
 
-        return null;
+        //加载控件
+        ui.group.iconImageView = (ImageView) view.findViewById(R.id.iconImageView); //图标
+        ui.group.pageTextView = (TextView) view.findViewById(R.id.pageTextView); //页码
+        ui.group.titleTextView = (TextView) view.findViewById(R.id.titleTextView); //标题
+        ui.group.playButton = (Button) view.findViewById(R.id.playButton); //播放按钮
+        ui.group.loopImageView = (ImageView) view.findViewById(R.id.loopImageView); //循环图标
+
+        ui.group.iconImageView.setImageDrawable(catalog.getIconDrawable()); //设置图标
+
+        //播放按钮（注：如果语音开关值为false时，不显示播放按钮）
+        ui.group.playButton.setFocusable(false);
+        if (!catalog.hasAudio()) {
+            ui.group.playButton.setVisibility(View.INVISIBLE);
+        }
+
+        //设置当前项背景色
+        if (catalog.getIndex() == book.getCurrentAudio().getIndex()) {
+            view.setBackgroundResource(R.color.catalog_group_current); //设置背景色
+            ui.group.titleTextView.setEllipsize(TextUtils.TruncateAt.MARQUEE); //当前项标题设置为超长滚动
+        }
+
+        ui.group.titleTextView.setText(catalog.getTitle()); //目录标题
+
+        return view;
     }
 
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-        return null;
+        //载入列表子视图布局
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.catalog_child_view, parent, false);
+
+        return view;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.study91.audiobook.media.view;
+package com.study91.audiobook.view;
 
 import android.content.Context;
 import android.graphics.Rect;

@@ -77,7 +77,7 @@
         </RelativeLayout>
 
         <!-- 语音标题 -->
-        <com.study91.audiobook.media.view.ScrollTextView
+        <com.study91.audiobook.view.ScrollTextView
             android:id="@+id/audioTitleTextView"
             android:layout_width="match_parent"
             android:layout_height="@dimen/media_player_icon_height"
