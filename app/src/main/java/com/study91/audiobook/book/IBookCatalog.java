@@ -28,6 +28,12 @@ public interface IBookCatalog {
     int getIndex();
 
     /**
+     * 获取目录位置
+     * @return 目录位置
+     */
+    int getPosition();
+
+    /**
      * 获取目录页码
      * @return 目录页码
      */

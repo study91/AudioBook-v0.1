@@ -1,6 +1,8 @@
 package com.study91.audiobook.book.view;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.ServiceConnection;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +15,7 @@ import android.widget.TextView;
 import com.study91.audiobook.R;
 import com.study91.audiobook.book.IBook;
 import com.study91.audiobook.book.IBookCatalog;
+import com.study91.audiobook.media.IBookMediaPlayer;
 import com.study91.audiobook.system.SystemManager;
 
 import java.util.List;
@@ -148,6 +151,21 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
          * 书列表集合
          */
         List<IBookCatalog> catalogs;
+
+        /**
+         * 媒体服务连接
+         */
+        ServiceConnection mediaServiceConnection;
+
+        /**
+         * 媒体广播接收器
+         */
+        BroadcastReceiver mediaBroadcastReceiver;
+
+        /**
+         * 媒体播放器
+         */
+        IBookMediaPlayer mediaPlayer;
     }
 
     /**

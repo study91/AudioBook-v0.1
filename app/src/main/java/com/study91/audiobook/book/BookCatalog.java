@@ -13,6 +13,8 @@ import com.study91.audiobook.system.SystemManager;
 import com.study91.audiobook.tools.ImageTools;
 import com.study91.audiobook.tools.MediaTools;
 
+import java.util.List;
+
 /**
  * 目录
  */
@@ -47,6 +49,23 @@ class BookCatalog implements IBookCatalog {
     @Override
     public int getIndex() {
         return m.index;
+    }
+
+    @Override
+    public int getPosition() {
+        List<IBookCatalog> catalogs = getBook().getCatalogs(); //目录集合
+
+        for (int i = 0; i < catalogs.size(); i++) {
+            IBookCatalog catalog = catalogs.get(i); //目录
+
+            //遍历查询当前语音索引在目录中的位置
+            if (catalog.getIndex() == getIndex()) {
+                m.position = i;
+                break;
+            }
+        }
+
+        return m.position;
     }
 
     @Override
@@ -213,6 +232,11 @@ class BookCatalog implements IBookCatalog {
          * 目录索引
          */
         int index;
+
+        /**
+         * 目录位置
+         */
+        int position;
 
         /**
          * 目录页码
