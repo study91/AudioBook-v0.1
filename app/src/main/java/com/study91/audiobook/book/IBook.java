@@ -103,6 +103,18 @@ public interface IBook {
     void moveToNextAudio();
 
     /**
+     * 设置复读起点目录
+     * @param catalog 目录
+     */
+    void setFirstAudio(IBookCatalog catalog);
+
+    /**
+     * 获取复读起点目录
+     * @return 复读起点目录
+     */
+    IBookCatalog getFirstAudio();
+
+    /**
      * 设置当前语音目录
      * @param catalog 语音目录
      */
@@ -113,6 +125,18 @@ public interface IBook {
      * @return 当前语音目录
      */
     IBookCatalog getCurrentAudio();
+
+    /**
+     * 设置复读终点目录
+     * @param catalog 复读终点目录
+     */
+    void setLastAudio(IBookCatalog catalog);
+
+    /**
+     * 获取复读终点目录
+     * @return 复读终点目录
+     */
+    IBookCatalog getLastAudio();
 
     /**
      * 设置当前显示页

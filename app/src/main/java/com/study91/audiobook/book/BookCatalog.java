@@ -84,6 +84,11 @@ class BookCatalog implements IBookCatalog {
     }
 
     @Override
+    public void setAudioPlayEnable(boolean value) {
+        //TODO 设置语音播放开关
+    }
+
+    @Override
     public boolean allowPlayAudio() {
         return m.allowPlayAudio;
     }

@@ -125,6 +125,16 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
             }
         }
 
+        if (catalog.hasAudio() && catalog.allowPlayAudio()) {
+            if (catalog.getIndex() == getBook().getFirstAudio().getIndex()) {
+                ui.group.loopImageView.setBackgroundResource(R.mipmap.catalog_group_loop_first); //复读起点语音图标
+            } else if (catalog.getIndex() == getBook().getLastAudio().getIndex()) {
+                ui.group.loopImageView.setBackgroundResource(R.mipmap.catalog_group_loop_last); //复读终点语音图标
+            } else {
+                ui.group.loopImageView.setBackgroundResource(R.mipmap.catalog_group_loop_middle); //复读中间语音图标
+            }
+        }
+
         ui.group.titleTextView.setText(catalog.getTitle()); //目录标题
 
         return view;
@@ -132,8 +142,53 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
 
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-        //列表子视图布局
-        return LayoutInflater.from(getContext()).inflate(R.layout.catalog_child_view, parent, false);
+        //载入列表子视图布局
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.catalog_child_view, parent, false);
+
+        IBook book = getBook(); //全局书
+        List<IBookCatalog> catalogs = book.getCatalogs(); //目录集合
+        IBookCatalog catalog = catalogs.get(groupPosition); //目录
+
+        //载入控件
+        ui.child.firstButton = (Button) view.findViewById(R.id.firstButton); //复读起点按钮
+        ui.child.lastButton = (Button) view.findViewById(R.id.lastButton); //复读终点按钮
+        ui.child.displayButton = (Button) view.findViewById(R.id.displayButton); //显示按钮
+        ui.child.explainButton = (Button) view.findViewById(R.id.explainButton); //详解按钮
+        ui.child.allowPlayAudioButton = (Button) view.findViewById(R.id.allowPlayAudioButton); //播放开关按钮
+
+        if (catalog.hasAudio()) {
+            if (catalog.getIndex() < book.getCurrentAudio().getIndex()) { //页号小于当前目录页号
+                ui.child.lastButton.setVisibility(View.GONE); //复读终点按钮禁用
+                ui.child.firstButton.setVisibility(View.VISIBLE); //复读起点按钮可用
+            } else if (catalog.getIndex() > book.getCurrentAudio().getIndex()) { //页号大于当前目录页号
+                ui.child.lastButton.setVisibility(View.VISIBLE); //复读终点按钮可用
+                ui.child.firstButton.setVisibility(View.GONE); //复读起点按钮禁用
+            } else { //页号等于当前目录页号
+                ui.child.allowPlayAudioButton.setEnabled(false); //播放开关按钮禁用
+                ui.child.allowPlayAudioButton.setVisibility(View.GONE);
+            }
+
+            if (catalog.getIndex() == getBook().getFirstAudio().getIndex()) {
+                ui.child.firstButton.setVisibility(View.GONE); //复读起点按钮禁用
+            }
+
+            if (catalog.getIndex() == getBook().getLastAudio().getIndex()) {
+                ui.child.lastButton.setVisibility(View.GONE); //复读终点按钮禁用
+            }
+
+            if(catalog.allowPlayAudio()) { //播放开关打开
+                ui.child.allowPlayAudioButton.setBackgroundResource(R.drawable.catalog_child_cancel);
+            } else { //播放开关关闭
+                ui.child.allowPlayAudioButton.setBackgroundResource(R.drawable.catalog_child_add);
+            }
+        } else {
+            //没有语音的目录，关闭复读起点、复读终点、播放开关按钮
+            ui.child.firstButton.setVisibility(View.GONE); //禁用复读起点按钮
+            ui.child.lastButton.setVisibility(View.GONE); //禁用复读终点按钮
+            ui.child.allowPlayAudioButton.setVisibility(View.GONE); //禁用播放开关按钮
+        }
+
+        return view;
     }
 
     @Override
