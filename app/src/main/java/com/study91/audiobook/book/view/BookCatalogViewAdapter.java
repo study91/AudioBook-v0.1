@@ -1,8 +1,13 @@
 package com.study91.audiobook.book.view;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.IBinder;
+import android.support.v4.view.PagerAdapter;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,13 +20,15 @@ import android.widget.TextView;
 import com.study91.audiobook.R;
 import com.study91.audiobook.book.IBook;
 import com.study91.audiobook.book.IBookCatalog;
+import com.study91.audiobook.dict.ReceiverAction;
 import com.study91.audiobook.media.IBookMediaPlayer;
+import com.study91.audiobook.media.MediaService;
 import com.study91.audiobook.system.SystemManager;
 
 import java.util.List;
 
 /**
- * 目录视图适配器
+ * 目录视图适配器（注：退出时必须执行 release()方法 释放资源）
  */
 class BookCatalogViewAdapter extends BaseExpandableListAdapter {
     private UI ui = new UI(); //私有界面
@@ -33,6 +40,16 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
      */
     public BookCatalogViewAdapter(Context context) {
         m.context = context; //应用程序上下文
+        bindMediaService(); //绑定媒体服务
+        registerMediaBroadcastsReceiver(); //注册媒体广播接收器
+    }
+
+    /**
+     * 释放资源
+     */
+    public void release() {
+        unbindMediaService(); //取消绑定媒体服务
+        unregisterMediaBroadcastReceiver(); //注销媒体广播接收器
     }
 
     @Override
@@ -75,7 +92,7 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
         //载入列表组布局
         View view = LayoutInflater.from(getContext()).inflate(R.layout.catalog_group_view, parent, false);
 
-        IBook book = SystemManager.getUser(getContext()).getCurrentBook(); //全局书
+        IBook book = getBook(); //全局书
         List<IBookCatalog> catalogs = book.getCatalogs(); //目录集合
         IBookCatalog catalog = catalogs.get(groupPosition); //目录
 
@@ -94,10 +111,18 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
             ui.group.playButton.setVisibility(View.INVISIBLE);
         }
 
+        //设置单击事件监听器
+        ui.group.playButton.setOnClickListener(new OnPlayButtonClickListener(catalog));
+
         //设置当前项背景色
         if (catalog.getIndex() == book.getCurrentAudio().getIndex()) {
             view.setBackgroundResource(R.color.catalog_group_current); //设置背景色
             ui.group.titleTextView.setEllipsize(TextUtils.TruncateAt.MARQUEE); //当前项标题设置为超长滚动
+            if (isPlaying()) { //播放状态
+                ui.group.playButton.setBackgroundResource(R.drawable.catalog_group_pause); //暂停图标
+            } else { //暂停状态
+                ui.group.playButton.setBackgroundResource(R.drawable.catalog_group_play); //播放图标
+            }
         }
 
         ui.group.titleTextView.setText(catalog.getTitle()); //目录标题
@@ -107,10 +132,8 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
 
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-        //载入列表子视图布局
-        View view = LayoutInflater.from(getContext()).inflate(R.layout.catalog_child_view, parent, false);
-
-        return view;
+        //列表子视图布局
+        return LayoutInflater.from(getContext()).inflate(R.layout.catalog_child_view, parent, false);
     }
 
     @Override
@@ -119,11 +142,135 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
     }
 
     /**
+     * 绑定媒体服务
+     */
+    private void bindMediaService() {
+        //创建媒体服务Intent
+        Intent intent = new Intent(getContext(), MediaService.class);
+
+        //实例化媒体服务连接
+        m.mediaServiceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                MediaService.MediaServiceBinder binder = (MediaService.MediaServiceBinder) service;
+                m.bookMediaPlayer = binder.getMediaPlayer();
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+
+            }
+        };
+
+        //绑定媒体服务
+        getContext().bindService(intent, m.mediaServiceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    /**
+     * 取消媒体服务绑定
+     */
+    private void unbindMediaService() {
+        getContext().unbindService(m.mediaServiceConnection);
+    }
+
+    /**
+     * 注册媒体广播接收器
+     */
+    private void registerMediaBroadcastsReceiver() {
+        if (m.mediaBroadcastReceiver == null) {
+            m.mediaBroadcastReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    boolean isRefresh = false;
+
+                    IBook book = getBook(); //全局书
+                    IBookMediaPlayer mediaPlayer = getBookMediaPlayer(); //书媒体播放器
+
+                    if (getCurrentAudioIndex() != book.getCurrentAudio().getIndex()) {
+                        //当前语音索引发生变化
+                        setCurrentAudioIndex(book.getCurrentAudio().getIndex()); //重置当前语音索引
+                        isRefresh = true;
+                    } else if (isPlaying() != mediaPlayer.isPlaying()) {
+                        //播放状态发生变化
+                        setIsPlaying(mediaPlayer.isPlaying()); //缓存是否正在播放状态
+                        isRefresh = true;
+                    }
+
+                    //刷新列表
+                    if (isRefresh) {
+                        notifyDataSetChanged();
+                    }
+                }
+            };
+
+            IntentFilter intentFilter = new IntentFilter(ReceiverAction.CLIENT.toString());
+            getContext().registerReceiver(m.mediaBroadcastReceiver, intentFilter);
+        }
+    }
+
+    /**
+     * 注销媒体广播接收器
+     */
+    private void unregisterMediaBroadcastReceiver() {
+        if (m.mediaBroadcastReceiver != null) {
+            getContext().unregisterReceiver(m.mediaBroadcastReceiver);
+        }
+    }
+
+    /**
+     * 获取书媒体播放器
+     * @return 书媒体播放器
+     */
+    private IBookMediaPlayer getBookMediaPlayer() {
+        return m.bookMediaPlayer;
+    }
+
+    /**
+     * 设置是否正在播放
+     * @param isPlaying true=正播放，false=没有播放
+     */
+    private void setIsPlaying(boolean isPlaying) {
+        m.isPlaying = isPlaying;
+    }
+
+    /**
+     * 是否正在播放
+     * @return true=正播放，false=没有播放
+     */
+    private boolean isPlaying() {
+        return m.isPlaying;
+    }
+
+    /**
+     * 设置当前语音索引
+     * @param index 索引
+     */
+    private void setCurrentAudioIndex(int index) {
+        m.currentAudioIndex = index;
+    }
+
+    /**
+     * 获取当前语音索引
+     * @return 当前语音索引
+     */
+    private int getCurrentAudioIndex() {
+        return m.currentAudioIndex;
+    }
+
+    /**
      * 获取应用程序上下文
      * @return 应用程序上下文
      */
     private Context getContext() {
         return m.context;
+    }
+
+    /**
+     * 获取全局书
+     * @return 全局书
+     */
+    private IBook getBook() {
+        return SystemManager.getUser(getContext()).getCurrentBook(); //全局书
     }
 
     /**
@@ -148,6 +295,16 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
         Context context;
 
         /**
+         * 是否正在播放（true=正播放，false=没有播放）
+         */
+        boolean isPlaying;
+
+        /**
+         * 当前语音索引
+         */
+        int currentAudioIndex;
+
+        /**
          * 书列表集合
          */
         List<IBookCatalog> catalogs;
@@ -163,9 +320,9 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
         BroadcastReceiver mediaBroadcastReceiver;
 
         /**
-         * 媒体播放器
+         * 书媒体播放器
          */
-        IBookMediaPlayer mediaPlayer;
+        IBookMediaPlayer bookMediaPlayer;
     }
 
     /**
@@ -240,6 +397,62 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
              * 充许播放按钮
              */
             Button allowPlayAudioButton;
+        }
+    }
+
+    /**
+     * 播放按钮单击事件监听器
+     */
+    private class OnPlayButtonClickListener implements View.OnClickListener {
+        private Field m = new Field(); //私有字段
+
+        /**
+         * 构造器
+         * @param catalog 目录
+         */
+        OnPlayButtonClickListener(IBookCatalog catalog) {
+            m.catalog = catalog;
+        }
+
+        @Override
+        public void onClick(View v) {
+            IBookMediaPlayer mediaPlayer = getBookMediaPlayer(); //书媒体播放器
+
+            if (getCurrentAudioIndex() == getCatalog().getIndex()) {
+                //点击的是当前目录的播放按钮
+                if (isPlaying()) {
+                    mediaPlayer.pause(); //如果正在播放，就暂停播放
+                } else {
+                    mediaPlayer.play(); //如果暂停播放，就开始播放
+                }
+            } else {
+                //点击的不是当前目录的播放按钮
+                IBook book = getBook(); //全局书
+                IBookCatalog catalog = getCatalog(); //当前目录
+                book.setCurrentAudio(catalog); //重置当前语音目录
+
+                //重置媒体播放器语音文件并播放语音
+                mediaPlayer.setAudioFile(catalog.getAudioFilename(), catalog.getTitle(), catalog.getIconFilename());
+                mediaPlayer.play(); //播放当前语音
+            }
+        }
+
+        /**
+         * 获取目录
+         * @return 目录
+         */
+        private IBookCatalog getCatalog() {
+            return m.catalog;
+        }
+
+        /**
+         * 私有字段类
+         */
+        private class Field {
+            /**
+             * 书目录
+             */
+            IBookCatalog catalog;
         }
     }
 }
