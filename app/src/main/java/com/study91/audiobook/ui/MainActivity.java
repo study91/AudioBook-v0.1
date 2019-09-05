@@ -67,9 +67,10 @@ public class MainActivity extends Activity {
                         currentAudio.getTitle(),
                         book.getIconFilename());
                 getMediaPlayer().setSoundType(book.getSoundType());
+                getMediaPlayer().play();
 
-                Intent intent = new Intent(getApplicationContext(), PageActivity.class);
-                startActivity(intent);
+//                Intent intent = new Intent(getApplicationContext(), PageActivity.class);
+//                startActivity(intent);
             }
         });
 
@@ -89,9 +90,10 @@ public class MainActivity extends Activity {
                         currentAudio.getTitle(),
                         book.getIconFilename());
                 getMediaPlayer().setSoundType(book.getSoundType());
+                getMediaPlayer().play();
 
-                Intent intent = new Intent(getApplicationContext(), PageActivity.class);
-                startActivity(intent);
+//                Intent intent = new Intent(getApplicationContext(), PageActivity.class);
+//                startActivity(intent);
             }
         });
 

@@ -21,6 +21,7 @@ import com.study91.audiobook.dict.ReceiverAction;
 import com.study91.audiobook.media.IBookMediaPlayer;
 import com.study91.audiobook.media.MediaService;
 import com.study91.audiobook.tools.MediaTools;
+import com.study91.audiobook.ui.PageActivity;
 
 public class MediaPlayerView extends RelativeLayout {
     private UI ui = new UI(); //界面
@@ -42,7 +43,7 @@ public class MediaPlayerView extends RelativeLayout {
         ui.audioPositionTextView = (TextView) findViewById(R.id.audioPositionTextView); //语音位置文本框
         ui.audioLengthTextView = (TextView) findViewById(R.id.audioLengthTextView); //语音长度文本框
         ui.audioSeekBar = (SeekBar) findViewById(R.id.mediaSeekBar); //语音拖动条
-        ui.iconImageView = (ImageView) findViewById(R.id.iconImageView); //图标按钮
+        ui.iconImageView = (ImageView) findViewById(R.id.iconImageView); //图标
         ui.pageTextView = (TextView) findViewById(R.id.pageTextView); //页号文本框
         ui.audioTitleTextView = (TextView) findViewById(R.id.audioTitleTextView); //标题文本框
         ui.playButton = (Button) findViewById(R.id.playButton); //播放按钮
@@ -50,6 +51,10 @@ public class MediaPlayerView extends RelativeLayout {
         ui.fullScreenButton = (Button) findViewById(R.id.fullScreenButton); //全屏按钮
         ui.volumeButton = (Button) findViewById(R.id.volumeButton); //音量按钮
         ui.catalogButton = (Button) findViewById(R.id.catalogButton); //目录按钮
+
+        //设置事件监听器
+        ui.iconImageView.setOnClickListener(new OnIconClickListener()); //图标单击
+        ui.audioTitleTextView.setOnClickListener(new OnTitleClickListener()); //标题单击
 
 //        if(isInEditMode()) return; //解决可视化编辑器无法识别自定义控件的问题（此语句现在可以不用）
 
@@ -153,6 +158,34 @@ public class MediaPlayerView extends RelativeLayout {
     private void unregisterMediaBroadcastReceiver() {
         if (m.mediaBroadcastReceiver != null) {
             getContext().unregisterReceiver(m.mediaBroadcastReceiver);
+        }
+    }
+
+    /**
+     * 显示页
+     */
+    private void showPage() {
+        Intent intent = new Intent(getContext(), PageActivity.class);
+        getContext().startActivity(intent);
+    }
+
+    /**
+     * 图标单击事件监听器
+     */
+    private class OnIconClickListener implements OnClickListener {
+        @Override
+        public void onClick(View v) {
+            showPage(); //显示页
+        }
+    }
+
+    /**
+     * 标题单击事件监听器
+     */
+    private class OnTitleClickListener implements OnClickListener {
+        @Override
+        public void onClick(View v) {
+            showPage(); //显示页
         }
     }
 

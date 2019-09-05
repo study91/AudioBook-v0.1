@@ -615,7 +615,7 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
 
         @Override
         public void onClick(View v) {
-            getBook().resetAudioPlayEnable(getCatalog()); //重置播放开关
+            getBook().resetAudioPlayEnable(getCatalog()); //重置语音播放开关
             notifyDataSetChanged(); //刷新
         }
 

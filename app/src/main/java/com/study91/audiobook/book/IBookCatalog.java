@@ -58,12 +58,6 @@ public interface IBookCatalog {
     void setAudioPlayEnable(boolean value);
 
     /**
-     * 更新语音播放开关
-     * @param value true=充许播放，false=禁止播放
-     */
-    void updateAudioPlayEnable(boolean value);
-
-    /**
      * 是否充许播放语音
      * @return true=充许播放语音 false=不充许播放语音
      */

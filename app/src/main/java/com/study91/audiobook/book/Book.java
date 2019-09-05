@@ -290,6 +290,12 @@ class Book implements IBook {
             updateCurrentAudio(catalog.getIndex()); //更新当前语音
         }
 
+        //目录不充许播放时，将目录设置为复读起点和复读终点
+        if (!catalog.allowPlayAudio()) {
+            setFirstAudio(catalog); //设置复读起点
+            setLastAudio(catalog); //设置复读终点
+        }
+
         m.currentAudio = catalog;
     }
 
@@ -461,12 +467,12 @@ class Book implements IBook {
                 setLastAudio(getPreviousAudio(catalog));
             } else if(catalog.getIndex() > getFirstAudio().getIndex() &&
                     catalog.getIndex() < getLastAudio().getIndex()){
-                catalog.updateAudioPlayEnable(false);
                 catalog.setAudioPlayEnable(false);
+                updateAudioPlayEnable(catalog);
             }
         } else {
-            catalog.updateAudioPlayEnable(true);
             catalog.setAudioPlayEnable(true);
+            updateAudioPlayEnable(catalog);
 
             //不充许播放时执行充许播放操作
             if (catalog.getIndex() < getFirstAudio().getIndex()) {
@@ -474,6 +480,34 @@ class Book implements IBook {
             } else if (catalog.getIndex() > getLastAudio().getIndex()) {
                 m.lastAudio = catalog;
             }
+        }
+    }
+
+    /**
+     * 更新语音播放开关
+     * @param catalog 目录
+     */
+    private void updateAudioPlayEnable(IBookCatalog catalog) {
+        IData data = null;
+
+        try {
+            IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
+            data = DataManager.createData(config.getBookDataSource()); //创建数据对象
+
+            //将播放开关值转换为数据库中的实际存储值
+            int allowPlayAudio = 0;
+            if (catalog.allowPlayAudio()) allowPlayAudio = 1;
+
+            //更新字符串
+            String sql = "UPDATE [BookCatalog] " +
+                    "SET [AllowPlayAudio] = " + allowPlayAudio + " " +
+                    "WHERE " +
+                    "[BookID] = " + getBookID() + " AND " +
+                    "[Index] = " + catalog.getIndex();
+
+            data.execute(sql); //执行更新
+        }  finally {
+            if(data != null) data.close(); //关闭数据对象
         }
     }
 
