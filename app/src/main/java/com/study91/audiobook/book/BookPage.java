@@ -30,6 +30,7 @@ class BookPage implements IBookPage {
 
     @Override
     public int getBookID() {
+        //TODO 取值应该是全局书的ID
         return m.bookID;
     }
 

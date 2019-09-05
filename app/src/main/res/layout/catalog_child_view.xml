@@ -39,9 +39,9 @@
         android:layout_margin="5dp"
         android:background="@drawable/catalog_child_last" />
 
-    <!-- 充许播放语音按钮 -->
+    <!-- 播放开关按钮 -->
     <Button
-        android:id="@+id/allowPlayAudioButton"
+        android:id="@+id/playEnableButton"
         android:layout_width="45dp"
         android:layout_height="45dp"
         android:layout_margin="5dp"

@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.IBinder;
-import android.support.v4.view.PagerAdapter;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,7 +37,7 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
      * 构造器
      * @param context 应用程序上下文
      */
-    public BookCatalogViewAdapter(Context context) {
+    BookCatalogViewAdapter(Context context) {
         m.context = context; //应用程序上下文
         bindMediaService(); //绑定媒体服务
         registerMediaBroadcastsReceiver(); //注册媒体广播接收器
@@ -133,6 +132,11 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
             } else {
                 ui.group.loopImageView.setBackgroundResource(R.mipmap.catalog_group_loop_middle); //复读中间语音图标
             }
+
+            //复读起点和复读终点相同时，不显示循环图标
+            if (book.getFirstAudio().getIndex() == book.getLastAudio().getIndex()) {
+                ui.group.loopImageView.setVisibility(View.INVISIBLE); //不显示循环图标
+            }
         }
 
         ui.group.titleTextView.setText(catalog.getTitle()); //目录标题
@@ -154,7 +158,12 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
         ui.child.lastButton = (Button) view.findViewById(R.id.lastButton); //复读终点按钮
         ui.child.displayButton = (Button) view.findViewById(R.id.displayButton); //显示按钮
         ui.child.explainButton = (Button) view.findViewById(R.id.explainButton); //详解按钮
-        ui.child.allowPlayAudioButton = (Button) view.findViewById(R.id.allowPlayAudioButton); //播放开关按钮
+        ui.child.playEnableButton = (Button) view.findViewById(R.id.playEnableButton); //播放开关按钮
+
+        //设置事件监听器
+        ui.child.firstButton.setOnClickListener(new OnFirstButtonClickListener(catalog)); //复读起点单击事件
+        ui.child.lastButton.setOnClickListener(new OnLastButtonClickListener(catalog)); //复读终点单击事件
+        ui.child.playEnableButton.setOnClickListener(new OnPlayEnableButtonClickListener(catalog)); //复读开关单击事件
 
         if (catalog.hasAudio()) {
             if (catalog.getIndex() < book.getCurrentAudio().getIndex()) { //页号小于当前目录页号
@@ -164,8 +173,8 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
                 ui.child.lastButton.setVisibility(View.VISIBLE); //复读终点按钮可用
                 ui.child.firstButton.setVisibility(View.GONE); //复读起点按钮禁用
             } else { //页号等于当前目录页号
-                ui.child.allowPlayAudioButton.setEnabled(false); //播放开关按钮禁用
-                ui.child.allowPlayAudioButton.setVisibility(View.GONE);
+                ui.child.playEnableButton.setEnabled(false); //播放开关按钮禁用
+                ui.child.playEnableButton.setVisibility(View.GONE);
             }
 
             if (catalog.getIndex() == getBook().getFirstAudio().getIndex()) {
@@ -177,15 +186,15 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
             }
 
             if(catalog.allowPlayAudio()) { //播放开关打开
-                ui.child.allowPlayAudioButton.setBackgroundResource(R.drawable.catalog_child_cancel);
+                ui.child.playEnableButton.setBackgroundResource(R.drawable.catalog_child_cancel);
             } else { //播放开关关闭
-                ui.child.allowPlayAudioButton.setBackgroundResource(R.drawable.catalog_child_add);
+                ui.child.playEnableButton.setBackgroundResource(R.drawable.catalog_child_add);
             }
         } else {
             //没有语音的目录，关闭复读起点、复读终点、播放开关按钮
             ui.child.firstButton.setVisibility(View.GONE); //禁用复读起点按钮
             ui.child.lastButton.setVisibility(View.GONE); //禁用复读终点按钮
-            ui.child.allowPlayAudioButton.setVisibility(View.GONE); //禁用播放开关按钮
+            ui.child.playEnableButton.setVisibility(View.GONE); //禁用播放开关按钮
         }
 
         return view;
@@ -449,9 +458,9 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
             Button explainButton;
 
             /**
-             * 充许播放按钮
+             * 播放开关按钮
              */
-            Button allowPlayAudioButton;
+            Button playEnableButton;
         }
     }
 
@@ -506,6 +515,125 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
         private class Field {
             /**
              * 书目录
+             */
+            IBookCatalog catalog;
+        }
+    }
+
+    /**
+     * 复读起点按钮单击事件监听器
+     */
+    private class OnFirstButtonClickListener implements View.OnClickListener {
+        private Field m = new Field(); //私有字段
+
+        /**
+         * 构造器
+         * @param catalog 目录
+         */
+        public OnFirstButtonClickListener(IBookCatalog catalog) {
+            m.catalog = catalog; //有声书内容
+        }
+
+        @Override
+        public void onClick(View v) {
+            getBook().setFirstAudio(getCatalog()); //重置复读起点
+            notifyDataSetChanged();
+        }
+
+
+        /**
+         * 获取目录
+         * @return 目录
+         */
+        private IBookCatalog getCatalog() {
+            return m.catalog;
+        }
+
+        /**
+         * 私有字段类
+         */
+        private class Field {
+            /**
+             * 书目录
+             */
+            IBookCatalog catalog;
+        }
+    }
+
+    /**
+     * 复读终点按钮单击事件监听器
+     */
+    private class OnLastButtonClickListener implements View.OnClickListener {
+        private Field m = new Field(); //私有字段
+
+        /**
+         * 构造器
+         * @param catalog 目录
+         */
+        public OnLastButtonClickListener(IBookCatalog catalog) {
+            m.catalog = catalog; //有声书内容
+        }
+
+        @Override
+        public void onClick(View v) {
+            getBook().setLastAudio(getCatalog()); //重置复读终点
+            notifyDataSetChanged();
+        }
+
+        /**
+         * 获取目录
+         * @return 目录
+         */
+        private IBookCatalog getCatalog() {
+            return m.catalog;
+        }
+
+        /**
+         * 私有字段类
+         */
+        private class Field {
+            /**
+             * 书目录
+             */
+            IBookCatalog catalog;
+        }
+    }
+
+    /**
+     * 播放开关按钮单击事件监听器
+     */
+    private class OnPlayEnableButtonClickListener implements View.OnClickListener {
+        private Field m = new Field(); //私有字段
+
+        /**
+         * 构造器
+         * @param catalog 目录
+         */
+        public OnPlayEnableButtonClickListener(IBookCatalog catalog) {
+            m.catalog = catalog; //目录
+        }
+
+        @Override
+        public void onClick(View v) {
+            getBook().resetAudioPlayEnable(getCatalog()); //重置播放开关
+            notifyDataSetChanged(); //刷新
+        }
+
+        /**
+         * 获取目录
+         *
+         * @return 目录
+         */
+        private IBookCatalog getCatalog() {
+            return m.catalog;
+        }
+
+        /**
+         * 私有字段类
+         */
+        private class Field {
+            /**
+             * 有声书内容
              */
             IBookCatalog catalog;
         }

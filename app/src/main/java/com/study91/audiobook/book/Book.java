@@ -24,7 +24,7 @@ import java.util.List;
  * 书
  */
 class Book implements IBook {
-    private String TAG = "Book";
+    //private String TAG = "Book";
     private Field m = new Field(); //私有字段
 
     /**
@@ -129,38 +129,75 @@ class Book implements IBook {
 
     @Override
     public void moveToNextAudio() {
-        IBookCatalog currentAudio = getCurrentAudio(); //获取当前语音
-        IBookCatalog lastAudio = getLastAudio(); //获取最后一个语音
-
-        if (currentAudio.getIndex() == lastAudio.getIndex()) {
-            //如果当前语音是最后一个语音时执行
-            setCurrentAudio(getFirstAudio()); //将第一个语音设置为当前语音
-        } else {
-            //当前语音不是最后一个语音时执行
-            List<IBookCatalog> catalogs = getCatalogs(); //获取目录列表
-
-            //遍历所有目录，查找并设置下一个语音目录为当前目录
-            for (int i = 0; i < catalogs.size(); i++) {
-                IBookCatalog catalog = catalogs.get(i); //获取目录
-
-                //目录有语音、充许播放语音且目录索引大于当前语音索引时执行
-                if (catalog.hasAudio() &&
-                        catalog.allowPlayAudio() &&
-                        catalog.getIndex() > currentAudio.getIndex()) {
-                    setCurrentAudio(catalog); //重置当前语音
-                    break;
-                }
-            }
-        }
+        setCurrentAudio(getNextAudio());
     }
 
     @Override
     public void setFirstAudio(IBookCatalog catalog) {
-        //TODO 设置复读起点目录
-        IBookCatalog firstAudio = getFirstAudio();
+        IBookCatalog oldFirstAudio = getFirstAudio();
 
-        if (catalog.getIndex() != firstAudio.getIndex()) {
+        //目录索引不等于原始复读起点索引时执行
+        if (catalog.getIndex() != oldFirstAudio.getIndex()) {
+            updateFirstAudio(catalog); //先更新数据库中的复读起点
 
+            //遍历重置目录中的语音播放开关
+            List<IBookCatalog> catalogs = getCatalogs(); //获取目录列表
+            for (IBookCatalog bookCatalog : catalogs) {
+                //目录有语音时执行
+                if (bookCatalog.hasAudio()) {
+                    if (bookCatalog.getIndex() >= catalog.getIndex() &&
+                            bookCatalog.getIndex() < oldFirstAudio.getIndex()) {
+                        //大于等于复读起点索引且小于原始复读起点索引的目录设置为充许播放
+                        bookCatalog.setAudioPlayEnable(true);
+                    } else if (bookCatalog.allowPlayAudio() &&
+                            bookCatalog.getIndex() < catalog.getIndex()) {
+                        //小于复读起点索引且充许播放的目录设置为禁止播放
+                        bookCatalog.setAudioPlayEnable(false);
+                    }
+                }
+            }
+        }
+
+        catalog.setAudioPlayEnable(true);
+        m.firstAudio = catalog; //重置复读起点语音
+    }
+
+    /**
+     * 更新复读起点
+     * @param catalog 目录
+     */
+    private void updateFirstAudio(IBookCatalog catalog) {
+        IData data = null;
+
+        try {
+            IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
+            data = DataManager.createData(config.getBookDataSource()); //创建数据对象
+
+            //更新字符串
+            String sql = "UPDATE [BookCatalog] " +
+                    "SET [AllowPlayAudio] = 0 " +
+                    "WHERE " +
+                    "[BookID] = " + getBookID() + " AND " +
+                    "[HasAudio] = 1 AND " +
+                    "[Index] < " + catalog.getIndex();
+
+            data.execute(sql); //执行更新
+
+            //如果新复读起点小于原复读起点的页号，打开新复读起点和原复读起点之间的播放开关
+            IBookCatalog oldFirstAudio = getFirstAudio();
+            if (catalog.getIndex() < oldFirstAudio.getIndex()) {
+                sql = "UPDATE [BookCatalog] " +
+                        "SET [AllowPlayAudio] = 1 " +
+                        "WHERE " +
+                        "[BookID] = " + getBookID() + " AND " +
+                        "[HasAudio] = 1 AND " +
+                        "[Index] >= " + catalog.getIndex() + " AND " +
+                        "[Index] < " + oldFirstAudio.getIndex();
+
+                data.execute(sql); //执行更新
+            }
+        } finally {
+            if (data != null) data.close(); //关闭数据对象
         }
     }
 
@@ -189,6 +226,63 @@ class Book implements IBook {
     }
 
     @Override
+    public IBookCatalog getPreviousAudio() {
+        IBookCatalog previousAudio = null;
+
+        IBookCatalog currentAudio = getCurrentAudio(); //当前语音目录
+        IBookCatalog firstAudio = getFirstAudio(); //第一个语音目录
+
+        if (currentAudio.getIndex() == firstAudio.getIndex()) {
+            //如果当前语音是复读起点时，将复读终点赋给上一个语音目录
+            previousAudio = getLastAudio();
+        } else {
+            //遍历查询上一个语音目录
+            List<IBookCatalog> catalogs = getCatalogs(); //获取目录列表
+            for (int i = catalogs.size() - 1; i >= 0; i--) {
+                IBookCatalog catalog = catalogs.get(i);
+                //目录有语音且索引小于当前目录索引时，找到上一个语音目录
+                if (catalog.hasAudio() && catalog.allowPlayAudio() &&
+                        catalog.getIndex() < currentAudio.getIndex()) {
+                    previousAudio = catalog;
+                    break;
+                }
+            }
+        }
+
+        return previousAudio;
+    }
+
+    /**
+     * 获取传入目录参数的上一个语音目录
+     * @param catalog 目录
+     * @return 上一个语音目录
+     */
+    private IBookCatalog getPreviousAudio(IBookCatalog catalog) {
+        IBookCatalog previousAudio = null;
+
+        IBookCatalog firstAudio = getFirstAudio(); //第一个语音目录
+
+        if (catalog.getIndex() == firstAudio.getIndex()) {
+            //如果当前语音是复读起点时，将复读终点赋给上一个语音目录
+            previousAudio = getLastAudio();
+        } else {
+            //遍历查询上一个语音目录
+            List<IBookCatalog> catalogs = getCatalogs(); //获取目录列表
+            for (int i = catalogs.size() - 1; i >= 0; i--) {
+                IBookCatalog bookCatalog = catalogs.get(i);
+                //目录有语音且索引小于当前目录索引时，找到上一个语音目录
+                if (bookCatalog.hasAudio() && bookCatalog.allowPlayAudio() &&
+                        bookCatalog.getIndex() < catalog.getIndex()) {
+                    previousAudio = bookCatalog;
+                    break;
+                }
+            }
+        }
+
+        return previousAudio;
+    }
+
+    @Override
     public void setCurrentAudio(IBookCatalog catalog) {
         //缓存的当前语音索引不等于参数语音目录索引时执行
         if (m.currentAudioIndex != catalog.getIndex()) {
@@ -210,8 +304,127 @@ class Book implements IBook {
     }
 
     @Override
+    public IBookCatalog getNextAudio() {
+        IBookCatalog nextAudio = null;
+
+        IBookCatalog currentAudio = getCurrentAudio(); //当前语音目录
+        IBookCatalog lastAudio = getLastAudio(); //最后一个语音目录
+
+        if (currentAudio.getIndex() == lastAudio.getIndex()) {
+            //如果当前语音是复读终点时，将复读起点赋给下一个语音目录
+            nextAudio = getFirstAudio();
+        } else {
+            //遍历查询下一个语音目录
+            List<IBookCatalog> catalogs = getCatalogs(); //获取目录列表
+            for (IBookCatalog catalog : catalogs) {
+                //目录有语音且索引大于当前目录索引时，找到下一个语音目录
+                if (catalog.hasAudio() && catalog.allowPlayAudio() &&
+                        catalog.getIndex() > currentAudio.getIndex()) {
+                    nextAudio = catalog;
+                    break;
+                }
+            }
+        }
+
+        return nextAudio;
+    }
+
+    /**
+     * 获取传入目录参数的下一个语音目录
+     * @param catalog 目录
+     * @return 下一个语音目录
+     */
+    private IBookCatalog getNextAudio(IBookCatalog catalog) {
+        IBookCatalog nextAudio = null;
+
+        IBookCatalog lastAudio = getLastAudio(); //最后一个语音目录
+
+        if (catalog.getIndex() == lastAudio.getIndex()) {
+            //如果当前语音是复读终点时，将复读起点赋给下一个语音目录
+            nextAudio = getFirstAudio();
+        } else {
+            //遍历查询下一个语音目录
+            List<IBookCatalog> catalogs = getCatalogs(); //获取目录列表
+            for (IBookCatalog bookCatalog : catalogs) {
+                //目录有语音且索引大于当前目录索引时，找到下一个语音目录
+                if (bookCatalog.hasAudio() && bookCatalog.allowPlayAudio() &&
+                        bookCatalog.getIndex() > catalog.getIndex()) {
+                    nextAudio = bookCatalog;
+                    break;
+                }
+            }
+        }
+
+        return nextAudio;
+    }
+
+    @Override
     public void setLastAudio(IBookCatalog catalog) {
-        //TODO 设置复读终点目录
+        IBookCatalog oldLastAudio = getLastAudio();
+
+        //目录索引不等于原始复读终点索引时执行
+        if (catalog.getIndex() != oldLastAudio.getIndex()) {
+            updateLastAudio(catalog); //先更新数据库中的复读终点
+
+            //遍历重置目录中的语音播放开关
+            List<IBookCatalog> catalogs = getCatalogs(); //获取目录列表
+            for (IBookCatalog bookCatalog : catalogs) {
+                //目录有语音时执行
+                if (bookCatalog.hasAudio()) {
+                    if (bookCatalog.getIndex() <= catalog.getIndex() &&
+                            bookCatalog.getIndex() > oldLastAudio.getIndex()) {
+                        //小于等于复读终点索引且大于原始复读终点索引的目录设置为充许播放
+                        bookCatalog.setAudioPlayEnable(true);
+                    } else if (bookCatalog.allowPlayAudio() &&
+                            bookCatalog.getIndex() > catalog.getIndex()) {
+                        //大于复读终点索引且充许播放的目录设置为禁止播放
+                        bookCatalog.setAudioPlayEnable(false);
+                    }
+                }
+            }
+
+            catalog.setAudioPlayEnable(true);
+            m.lastAudio = catalog; //重置复读终点语音
+        }
+    }
+
+    /**
+     * 更新复读终点
+     * @param catalog 目录
+     */
+    private void updateLastAudio(IBookCatalog catalog) {
+        IData data = null;
+
+        try {
+            IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
+            data = DataManager.createData(config.getBookDataSource()); //创建数据对象
+
+            //更新字符串
+            String sql = "UPDATE [BookCatalog] " +
+                    "SET [AllowPlayAudio] = 0 " +
+                    "WHERE " +
+                    "[BookID] = " + getBookID() + " AND " +
+                    "[HasAudio] = 1 AND " +
+                    "[Index] > " + catalog.getIndex();
+
+            data.execute(sql); //执行更新
+
+            //如果新复读起点小于原复读起点的页号，打开新复读起点和原复读起点之间的播放开关
+            IBookCatalog oldLastAudio = getLastAudio();
+            if (catalog.getIndex() < oldLastAudio.getIndex()) {
+                sql = "UPDATE [BookCatalog] " +
+                        "SET [AllowPlayAudio] = 1 " +
+                        "WHERE " +
+                        "[BookID] = " + getBookID() + " AND " +
+                        "[HasAudio] = 1 AND " +
+                        "[Index] <= " + catalog.getIndex() + " AND " +
+                        "[Index] > " + oldLastAudio.getIndex();
+
+                data.execute(sql); //执行更新
+            }
+        } finally {
+            if (data != null) data.close(); //关闭数据对象
+        }
     }
 
     /**
@@ -236,6 +449,32 @@ class Book implements IBook {
         }
 
         return m.lastAudio;
+    }
+
+    @Override
+    public void resetAudioPlayEnable(IBookCatalog catalog) {
+        if (catalog.allowPlayAudio()) {
+            //充许播放时执行不充许播放操作
+            if (catalog.getIndex() == getFirstAudio().getIndex()) {
+                setFirstAudio(getNextAudio(catalog));
+            } else if (catalog.getIndex() == getLastAudio().getIndex()) {
+                setLastAudio(getPreviousAudio(catalog));
+            } else if(catalog.getIndex() > getFirstAudio().getIndex() &&
+                    catalog.getIndex() < getLastAudio().getIndex()){
+                catalog.updateAudioPlayEnable(false);
+                catalog.setAudioPlayEnable(false);
+            }
+        } else {
+            catalog.updateAudioPlayEnable(true);
+            catalog.setAudioPlayEnable(true);
+
+            //不充许播放时执行充许播放操作
+            if (catalog.getIndex() < getFirstAudio().getIndex()) {
+                m.firstAudio = catalog;
+            } else if (catalog.getIndex() > getLastAudio().getIndex()) {
+                m.lastAudio = catalog;
+            }
+        }
     }
 
     @Override

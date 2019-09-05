@@ -28,19 +28,22 @@ class BookCatalog implements IBookCatalog {
      * @param index 目录索引
      */
     BookCatalog(Context context, int bookID, int index) {
+        //TODO 此处的bookID应读取全局Book的BookID
         m.context = context; //应用程序上下文
         load(bookID, index); //载入
     }
 
     @Override
     public int getBookID() {
+        //TODO 此处的BookID属性应取消
         return m.bookID;
     }
 
     @Override
     public IBook getBook() {
+        //TODO 此处的Book属性应取消
         if (m.book == null) {
-            m.book = BookManager.createBook(getContext(), getBookID());
+            m.book = SystemManager.getUser(getContext()).getCurrentBook();
         }
 
         return m.book;
@@ -85,7 +88,36 @@ class BookCatalog implements IBookCatalog {
 
     @Override
     public void setAudioPlayEnable(boolean value) {
-        //TODO 设置语音播放开关
+        m.allowPlayAudio = value;
+    }
+
+    /**
+     * 更新语音播放开关
+     * @param value 开关值（true=充许播放，false=禁止播放）
+     */
+    @Override
+    public void updateAudioPlayEnable(boolean value) {
+        IData data = null;
+
+        try {
+            IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
+            data = DataManager.createData(config.getBookDataSource()); //创建数据对象
+
+            //将播放开关值转换为数据库中的实际存储值
+            int allowPlayAudio = 0;
+            if (value) allowPlayAudio = 1;
+
+            //更新字符串
+            String sql = "UPDATE [BookCatalog] " +
+                    "SET [AllowPlayAudio] = " + allowPlayAudio + " " +
+                    "WHERE " +
+                    "[BookID] = " + getBookID() + " AND " +
+                    "[Index] = " + getIndex();
+
+            data.execute(sql); //执行更新
+        }  finally {
+            if(data != null) data.close(); //关闭数据对象
+        }
     }
 
     @Override
