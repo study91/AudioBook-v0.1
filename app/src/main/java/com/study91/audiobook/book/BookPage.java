@@ -30,17 +30,7 @@ class BookPage implements IBookPage {
 
     @Override
     public int getBookID() {
-        //TODO 取值应该是全局书的ID
         return m.bookID;
-    }
-
-    @Override
-    public IBook getBook() {
-        if (m.book == null) {
-            m.book = BookManager.createBook(getContext(), getBookID());
-        }
-
-        return m.book;
     }
 
     @Override
@@ -121,6 +111,14 @@ class BookPage implements IBookPage {
      */
     private Context getContext() {
         return m.context;
+    }
+
+    /**
+     * 获取全局书
+     * @return 全局书
+     */
+    private IBook getBook() {
+        return SystemManager.getUser(getContext()).getCurrentBook();
     }
 
     /**

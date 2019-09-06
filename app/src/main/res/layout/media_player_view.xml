@@ -73,24 +73,35 @@
                 android:layout_centerVertical="true"
                 android:gravity="center"
                 android:textColor="@drawable/hyperlink_white"
-                android:textSize="@dimen/media_player_font_size"/>
+                android:textSize="@dimen/media_player_title_font_size"/>
         </RelativeLayout>
+
+        <TextView
+            android:id="@+id/bookNameTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="3dp"
+            android:layout_toLeftOf="@+id/mediaToolsLayout"
+            android:layout_toRightOf="@+id/iconLayout"
+            android:textColor="@drawable/hyperlink_white"
+            android:textSize="@dimen/media_player_book_name_font_size" />
 
         <!-- 语音标题 -->
         <com.study91.audiobook.view.ScrollTextView
             android:id="@+id/audioTitleTextView"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/media_player_icon_height"
-            android:layout_alignParentTop="true"
-            android:padding="3dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:layout_alignBottom="@+id/iconLayout"
             android:layout_toLeftOf="@+id/mediaToolsLayout"
             android:layout_toRightOf="@+id/iconLayout"
             android:ellipsize="marquee"
             android:gravity="center_vertical"
             android:marqueeRepeatLimit="marquee_forever"
+            android:padding="3dp"
             android:singleLine="true"
             android:textColor="@drawable/hyperlink_white"
-            android:textSize="@dimen/media_player_font_size" />
+            android:textSize="@dimen/media_player_title_font_size" />
 
         <!-- 媒体工具按钮布局 -->
         <LinearLayout

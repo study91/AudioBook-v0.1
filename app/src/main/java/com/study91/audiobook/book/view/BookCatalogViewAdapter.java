@@ -165,6 +165,11 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
         ui.child.lastButton.setOnClickListener(new OnLastButtonClickListener(catalog)); //复读终点单击事件
         ui.child.playEnableButton.setOnClickListener(new OnPlayEnableButtonClickListener(catalog)); //复读开关单击事件
 
+        //没有解释的目录，关闭详解按钮
+        if (!catalog.hasExplain()) {
+            ui.child.explainButton.setVisibility(View.GONE);
+        }
+
         if (catalog.hasAudio()) {
             if (catalog.getIndex() < book.getCurrentAudio().getIndex()) { //页号小于当前目录页号
                 ui.child.lastButton.setVisibility(View.GONE); //复读终点按钮禁用

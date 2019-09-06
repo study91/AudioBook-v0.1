@@ -17,6 +17,7 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 
 import com.study91.audiobook.book.BookManager;
 import com.study91.audiobook.book.IBook;
@@ -58,6 +59,14 @@ public class MediaService extends Service {
 
         IBook book = user.getCurrentBook(); //获取当前打开的书
         IBookCatalog currentAudio = book.getCurrentAudio(); //获取当前语音目录
+
+        Log.d("Test", "书：" + book.getBookName());
+        if (currentAudio == null) {
+            Log.d("Test", "当前语音为空");
+        } else {
+            Log.d("Test", "书：" + book.getBookName());
+            Log.d("Test", "语音目录：" + currentAudio.getTitle());
+        }
 
         //设置语音文件
         getMediaPlayer().setAudioFile(

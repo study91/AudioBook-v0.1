@@ -292,6 +292,8 @@ class Book implements IBook {
 
         //目录不充许播放时，将目录设置为复读起点和复读终点
         if (!catalog.allowPlayAudio()) {
+            catalog.setAudioPlayEnable(true); //设置为充许播放
+            updateAudioPlayEnable(catalog); //更新语音目录
             setFirstAudio(catalog); //设置复读起点
             setLastAudio(catalog); //设置复读终点
         }

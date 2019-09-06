@@ -36,14 +36,14 @@ public class AudioBookTest {
         testUser(user);
 
         Log.d(TAG, "\n********** 当前打开的书 **********");
-        user.setCurrentBook(5);
+//        user.setCurrentBook(5);
         IBook book = user.getCurrentBook();
         testBook(book);
 
         Log.d(TAG, "\n********** 当前语音目录 **********");
 //        book.setCurrentAudio(11);
-        IBookCatalog currentAudio = book.getCurrentAudio();
-        testCatalog(currentAudio);
+//        IBookCatalog currentAudio = book.getCurrentAudio();
+//        testCatalog(currentAudio);
 
         Log.d(TAG, "\n********** 当前显示页 **********");
 //        book.setCurrentPage(30);

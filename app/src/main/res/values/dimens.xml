@@ -13,5 +13,6 @@
     <dimen name="media_player_icon_height">45dp</dimen>
     <dimen name="media_player_padding">3dp</dimen>
     <dimen name="media_player_margin">3dp</dimen>
-    <dimen name="media_player_font_size">16sp</dimen>
+    <dimen name="media_player_title_font_size">16sp</dimen>
+    <dimen name="media_player_book_name_font_size">9sp</dimen>
 </resources>

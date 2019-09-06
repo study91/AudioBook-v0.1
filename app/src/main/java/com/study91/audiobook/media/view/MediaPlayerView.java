@@ -17,9 +17,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.study91.audiobook.R;
+import com.study91.audiobook.book.IBook;
 import com.study91.audiobook.dict.ReceiverAction;
 import com.study91.audiobook.media.IBookMediaPlayer;
 import com.study91.audiobook.media.MediaService;
+import com.study91.audiobook.system.SystemManager;
 import com.study91.audiobook.tools.MediaTools;
 import com.study91.audiobook.ui.PageActivity;
 
@@ -45,6 +47,7 @@ public class MediaPlayerView extends RelativeLayout {
         ui.audioSeekBar = (SeekBar) findViewById(R.id.mediaSeekBar); //语音拖动条
         ui.iconImageView = (ImageView) findViewById(R.id.iconImageView); //图标
         ui.pageTextView = (TextView) findViewById(R.id.pageTextView); //页号文本框
+        ui.bookNameTextView = (TextView) findViewById(R.id.bookNameTextView); //书名文本框
         ui.audioTitleTextView = (TextView) findViewById(R.id.audioTitleTextView); //标题文本框
         ui.playButton = (Button) findViewById(R.id.playButton); //播放按钮
         ui.synchronizationButton = (Button) findViewById(R.id.synchronizationButton); //同步按钮
@@ -128,6 +131,10 @@ public class MediaPlayerView extends RelativeLayout {
                     ui.audioLengthTextView.setText(MediaTools.parseTime(getMediaPlayer().getLength())); //设置语音长度文本
                     ui.audioSeekBar.setMax(getMediaPlayer().getLength()); //设置语音进度条最大值
                     ui.audioSeekBar.setProgress(getMediaPlayer().getPosition()); //设置语音进度条播放位置
+
+                    //设置书名称
+                    IBook book = SystemManager.getUser(getContext()).getCurrentBook();
+                    ui.bookNameTextView.setText("<<" + book.getBookName() + ">>");
 
                     //设置标题内容
                     String title = getMediaPlayer().getAudioTitle().trim().replace("　", "");
@@ -285,6 +292,11 @@ public class MediaPlayerView extends RelativeLayout {
          * 页号文本框
          */
         private TextView pageTextView;
+
+        /**
+         * 书名称文本框
+         */
+        private TextView bookNameTextView;
 
         /**
          * 语音标题文本框

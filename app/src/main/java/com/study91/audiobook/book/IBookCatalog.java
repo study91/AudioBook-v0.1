@@ -10,16 +10,16 @@ import com.study91.audiobook.dict.FamiliarLevel;
  */
 public interface IBookCatalog {
     /**
+     * 获取目录ID
+     * @return 目录ID
+     */
+    int getCatalogID();
+
+    /**
      * 获取书ID
      * @return 书ID
      */
     int getBookID();
-
-    /**
-     * 获取书
-     * @return 书
-     */
-    IBook getBook();
 
     /**
      * 获取目录索引
@@ -44,6 +44,12 @@ public interface IBookCatalog {
      * @return 目录标题
      */
     String getTitle();
+
+    /**
+     * 是否有解释
+     * @return true=有解释 false=没有解释
+     */
+    boolean hasExplain();
 
     /**
      * 是否有语音

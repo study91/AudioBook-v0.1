@@ -13,12 +13,6 @@ public interface IBookPage {
     int getBookID();
 
     /**
-     * 获取书
-     * @return 书
-     */
-    IBook getBook();
-
-    /**
      * 获取页码
      * @return 页码
      */

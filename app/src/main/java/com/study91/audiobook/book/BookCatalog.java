@@ -28,25 +28,18 @@ class BookCatalog implements IBookCatalog {
      * @param index 目录索引
      */
     BookCatalog(Context context, int bookID, int index) {
-        //TODO 此处的bookID应读取全局Book的BookID
         m.context = context; //应用程序上下文
         load(bookID, index); //载入
     }
 
     @Override
-    public int getBookID() {
-        //TODO 此处的BookID属性应取消
-        return m.bookID;
+    public int getCatalogID() {
+        return m.catalogID;
     }
 
     @Override
-    public IBook getBook() {
-        //TODO 此处的Book属性应取消
-        if (m.book == null) {
-            m.book = SystemManager.getUser(getContext()).getCurrentBook();
-        }
-
-        return m.book;
+    public int getBookID() {
+        return m.bookID;
     }
 
     @Override
@@ -79,6 +72,11 @@ class BookCatalog implements IBookCatalog {
     @Override
     public String getTitle() {
         return m.title;
+    }
+
+    @Override
+    public boolean hasExplain() {
+        return m.hasExplain;
     }
 
     @Override
@@ -168,6 +166,14 @@ class BookCatalog implements IBookCatalog {
     }
 
     /**
+     * 获取全局书
+     * @return 全局书
+     */
+    private IBook getBook() {
+        return SystemManager.getUser(getContext()).getCurrentBook();
+    }
+
+    /**
      * 载入
      * @param bookID 书ID
      * @param index 目录索引
@@ -193,9 +199,11 @@ class BookCatalog implements IBookCatalog {
                 m.bookID = bookID; //书ID
                 m.index = index; //目录索引
 
+                m.catalogID = cursor.getInt(cursor.getColumnIndex("CatalogID")); //目录ID
                 m.pageNumber = cursor.getInt(cursor.getColumnIndex("PageNumber")); //页码
                 m.title = cursor.getString(cursor.getColumnIndex("Title")); //目录标题
                 m.hasAudio = cursor.getInt(cursor.getColumnIndex("HasAudio")) != 0; //是否有语音
+                m.hasExplain = cursor.getInt(cursor.getColumnIndex("HasExplain")) != 0; //是否有解释
 
                 if (m.hasAudio) {
                     m.allowPlayAudio = cursor.getInt(cursor.getColumnIndex("AllowPlayAudio")) != 0; //是否充许播放语音
@@ -227,6 +235,11 @@ class BookCatalog implements IBookCatalog {
         Context context;
 
         /**
+         * 目录ID
+         */
+        int catalogID;
+
+        /**
          * 书ID
          */
         int bookID;
@@ -255,6 +268,11 @@ class BookCatalog implements IBookCatalog {
          * 目录标题
          */
         String title;
+
+        /**
+         * 是否有解释
+         */
+        boolean hasExplain;
 
         /**
          * 是否有语音
