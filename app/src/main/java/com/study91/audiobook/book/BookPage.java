@@ -62,6 +62,25 @@ class BookPage implements IBookPage {
     }
 
     @Override
+    public IBookCatalog getCatalog() {
+        IBookCatalog bookCatalog = null;
+
+        IBook book = getBook();
+        List<IBookCatalog> catalogs = book.getCatalogs();
+
+        //遍历查找当前页所属的目录
+        for (int i = catalogs.size(); i > 0; i--) {
+            IBookCatalog catalog = catalogs.get(i);
+            if (catalog.getPageNumber() <= getPageNumber()) {
+                bookCatalog = catalog;
+                break;
+            }
+        }
+
+        return bookCatalog;
+    }
+
+    @Override
     public String getImageFilename() {
         String imageFilename = null;
 

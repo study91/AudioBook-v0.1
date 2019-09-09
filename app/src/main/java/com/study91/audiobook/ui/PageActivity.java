@@ -1,18 +1,32 @@
 package com.study91.audiobook.ui;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
 import com.study91.audiobook.R;
+import com.study91.audiobook.book.IBook;
+import com.study91.audiobook.book.IBookCatalog;
+import com.study91.audiobook.book.IBookPage;
 import com.study91.audiobook.book.view.BookImageViewPager;
 import com.study91.audiobook.book.view.OnSingleTapListener;
+import com.study91.audiobook.dict.ReceiverAction;
+import com.study91.audiobook.media.IBookMediaPlayer;
+import com.study91.audiobook.media.MediaService;
 import com.study91.audiobook.media.view.MediaPlayerView;
+import com.study91.audiobook.system.SystemManager;
 
 /**
  * 页活动
@@ -62,6 +76,16 @@ public class PageActivity extends Activity implements View.OnClickListener {
         });
 
         ui.fullLayout.addView(ui.bookImageViewPager);
+
+        bindMediaService(); //绑定媒体服务
+        registerMediaBroadcastsReceiver(); //注册媒体广播接收器
+    }
+
+    @Override
+    protected void onDestroy() {
+        unregisterMediaBroadcastReceiver(); //注销媒体广播接收器
+        unbindMediaService(); //取消媒体服务绑定
+        super.onDestroy();
     }
 
     @Override
@@ -106,6 +130,80 @@ public class PageActivity extends Activity implements View.OnClickListener {
     }
 
     /**
+     * 绑定媒体服务
+     */
+    private void bindMediaService() {
+        //创建媒体服务Intent
+        Intent intent = new Intent(this, MediaService.class);
+
+        //实例化媒体服务连接
+        m.mediaServiceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                MediaService.MediaServiceBinder binder = (MediaService.MediaServiceBinder) service;
+                m.bookMediaPlayer = binder.getMediaPlayer();
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+
+            }
+        };
+
+        //绑定媒体服务
+        bindService(intent, m.mediaServiceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    /**
+     * 取消媒体服务绑定
+     */
+    private void unbindMediaService() {
+        unbindService(m.mediaServiceConnection);
+    }
+
+    /**
+     * 注册媒体广播接收器
+     */
+    private void registerMediaBroadcastsReceiver() {
+        if (m.mediaBroadcastReceiver == null) {
+            m.mediaBroadcastReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    //TODO 接收广播代码
+                    ui.playButton.setVisibility(View.VISIBLE);
+                    ui.playButton.setBackgroundResource(R.drawable.button_play); //设置播放图示
+
+                    IBook book = SystemManager.getUser(getApplicationContext()).getCurrentBook();
+                    IBookCatalog currentAudio = book.getCurrentAudio();
+                    IBookPage currentPage = book.getCurrentPage();
+                    boolean isPlaying = m.bookMediaPlayer.isPlaying();
+
+                    if (currentAudio.getAudioFilename().equals(currentPage.getAudioFilename()) && isPlaying) {
+                        ui.playButton.setBackgroundResource(R.drawable.button_pause);
+                    }
+
+                    //判断是否显示播放按钮
+                    if (!currentPage.hasAudio()) {
+                        ui.playButton.setVisibility(View.GONE);
+                    }
+                }
+            };
+
+            IntentFilter intentFilter = new IntentFilter(ReceiverAction.CLIENT.toString());
+            registerReceiver(m.mediaBroadcastReceiver, intentFilter);
+        }
+    }
+
+    /**
+     * 注销媒体广播接收器
+     */
+    private void unregisterMediaBroadcastReceiver() {
+        if (m.mediaBroadcastReceiver != null) {
+            unregisterReceiver(m.mediaBroadcastReceiver);
+        }
+    }
+
+    /**
      * 私有字段类
      */
     private class Field {
@@ -113,6 +211,21 @@ public class PageActivity extends Activity implements View.OnClickListener {
          * 是否有工具条
          */
         boolean hasToolbar = true;
+
+        /**
+         * 媒体服务连接
+         */
+        ServiceConnection mediaServiceConnection;
+
+        /**
+         * 媒体广播接收器
+         */
+        BroadcastReceiver mediaBroadcastReceiver;
+
+        /**
+         * 书媒体播放器
+         */
+        IBookMediaPlayer bookMediaPlayer;
     }
 
     /**

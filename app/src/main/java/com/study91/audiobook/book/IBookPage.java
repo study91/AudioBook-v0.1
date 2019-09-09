@@ -31,6 +31,12 @@ public interface IBookPage {
     int getPosition();
 
     /**
+     * 获取目录
+     * @return 目录
+     */
+    IBookCatalog getCatalog();
+
+    /**
      * 获取图片文件名
      * @return 图片文件名
      */

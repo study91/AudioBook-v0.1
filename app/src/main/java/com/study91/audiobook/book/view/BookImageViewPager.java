@@ -36,8 +36,8 @@ public class BookImageViewPager extends ViewPager {
 
     @Override
     protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
         unregisterMediaBroadcastReceiver(); //注销媒体广播接收器
+        super.onDetachedFromWindow();
     }
 
     /**
