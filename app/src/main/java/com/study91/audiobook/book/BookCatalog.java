@@ -51,10 +51,10 @@ class BookCatalog implements IBookCatalog {
     public int getPosition() {
         List<IBookCatalog> catalogs = getBook().getCatalogs(); //目录集合
 
+        //遍历查询当前语音索引在目录中的位置
         for (int i = 0; i < catalogs.size(); i++) {
             IBookCatalog catalog = catalogs.get(i); //目录
 
-            //遍历查询当前语音索引在目录中的位置
             if (catalog.getIndex() == getIndex()) {
                 m.position = i;
                 break;

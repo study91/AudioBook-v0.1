@@ -72,7 +72,7 @@ public class MediaService extends Service {
         getMediaPlayer().setAudioFile(
                 currentAudio.getAudioFilename(),
                 currentAudio.getTitle(),
-                book.getIconFilename());
+                currentAudio.getIconFilename());
         getMediaPlayer().setSoundType(book.getSoundType());
     }
 

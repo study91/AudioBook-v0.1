@@ -7,6 +7,12 @@ import android.graphics.drawable.Drawable;
  */
 public interface IBookPage {
     /**
+     * 获取页ID
+     * @return 页ID
+     */
+    int getPageID();
+
+    /**
      * 获取书ID
      * @return 书ID
      */
@@ -17,6 +23,12 @@ public interface IBookPage {
      * @return 页码
      */
     int getPageNumber();
+
+    /**
+     * 获取页位置
+     * @return 页位置
+     */
+    int getPosition();
 
     /**
      * 获取图片文件名

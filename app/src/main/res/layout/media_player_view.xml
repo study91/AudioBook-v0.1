@@ -76,6 +76,7 @@
                 android:textSize="@dimen/media_player_title_font_size"/>
         </RelativeLayout>
 
+        <!-- 书名称 -->
         <TextView
             android:id="@+id/bookNameTextView"
             android:layout_width="match_parent"

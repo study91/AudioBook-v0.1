@@ -134,7 +134,7 @@ public class MediaPlayerView extends RelativeLayout {
 
                     //设置书名称
                     IBook book = SystemManager.getUser(getContext()).getCurrentBook();
-                    ui.bookNameTextView.setText("<<" + book.getBookName() + ">>");
+                    ui.bookNameTextView.setText("【" + book.getBookName() + "】");
 
                     //设置标题内容
                     String title = getMediaPlayer().getAudioTitle().trim().replace("　", "");

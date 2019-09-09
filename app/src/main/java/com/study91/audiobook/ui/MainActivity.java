@@ -65,7 +65,7 @@ public class MainActivity extends Activity {
                 getMediaPlayer().setAudioFile(
                         currentAudio.getAudioFilename(),
                         currentAudio.getTitle(),
-                        book.getIconFilename());
+                        currentAudio.getIconFilename());
                 getMediaPlayer().setSoundType(book.getSoundType());
                 getMediaPlayer().play();
 
@@ -88,7 +88,7 @@ public class MainActivity extends Activity {
                 getMediaPlayer().setAudioFile(
                         currentAudio.getAudioFilename(),
                         currentAudio.getTitle(),
-                        book.getIconFilename());
+                        currentAudio.getIconFilename());
                 getMediaPlayer().setSoundType(book.getSoundType());
                 getMediaPlayer().play();
 

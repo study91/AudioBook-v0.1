@@ -11,6 +11,8 @@ import com.study91.audiobook.system.SystemManager;
 import com.study91.audiobook.tools.ImageTools;
 import com.study91.audiobook.tools.MediaTools;
 
+import java.util.List;
+
 /**
  * 页
  */
@@ -29,6 +31,11 @@ class BookPage implements IBookPage {
     }
 
     @Override
+    public int getPageID() {
+        return 0;
+    }
+
+    @Override
     public int getBookID() {
         return m.bookID;
     }
@@ -36,6 +43,22 @@ class BookPage implements IBookPage {
     @Override
     public int getPageNumber() {
         return m.pageNumber;
+    }
+
+    @Override
+    public int getPosition() {
+        List<IBookPage> pages = getBook().getPages(); //页集合
+
+        //遍历查询当前页在页集合中的位置
+        for (int i = 0; i < pages.size(); i++) {
+            IBookPage page = pages.get(i); //页
+
+            if (page.getPageNumber() == getPageNumber()) {
+                m.position = i;
+                break;
+            }
+        }
+        return m.position;
     }
 
     @Override
@@ -146,6 +169,8 @@ class BookPage implements IBookPage {
                 cursor.moveToFirst();
                 m.bookID = bookID; //书ID
                 m.pageNumber = pageNumber; //页码
+
+                m.pageID = cursor.getInt(cursor.getColumnIndex("PageID")); //页ID
                 m.hasAudio = cursor.getInt(cursor.getColumnIndex("HasAudio")) != 0; //是否有语音
 
                 //图片及图标文件名
@@ -172,6 +197,11 @@ class BookPage implements IBookPage {
         Context context;
 
         /**
+         * 页ID
+         */
+        int pageID;
+
+        /**
          * 书ID
          */
         int bookID;
@@ -185,6 +215,11 @@ class BookPage implements IBookPage {
          * 页码
          */
         int pageNumber;
+
+        /**
+         * 页位置
+         */
+        int position;
 
         /**
          * 图片文件名

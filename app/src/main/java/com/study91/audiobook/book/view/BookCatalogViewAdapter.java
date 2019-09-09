@@ -23,6 +23,7 @@ import com.study91.audiobook.dict.ReceiverAction;
 import com.study91.audiobook.media.IBookMediaPlayer;
 import com.study91.audiobook.media.MediaService;
 import com.study91.audiobook.system.SystemManager;
+import com.study91.audiobook.ui.PageActivity;
 
 import java.util.List;
 
@@ -111,7 +112,8 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
         }
 
         //设置单击事件监听器
-        ui.group.playButton.setOnClickListener(new OnPlayButtonClickListener(catalog));
+        ui.group.iconImageView.setOnClickListener(new OnDisplayButtonClickListener(catalog)); //图标
+        ui.group.playButton.setOnClickListener(new OnPlayButtonClickListener(catalog)); //播放
 
         //设置当前项背景色
         if (catalog.getIndex() == book.getCurrentAudio().getIndex()) {
@@ -163,6 +165,7 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
         //设置事件监听器
         ui.child.firstButton.setOnClickListener(new OnFirstButtonClickListener(catalog)); //复读起点单击事件
         ui.child.lastButton.setOnClickListener(new OnLastButtonClickListener(catalog)); //复读终点单击事件
+        ui.child.displayButton.setOnClickListener(new OnDisplayButtonClickListener(catalog)); //显示按钮单击事件
         ui.child.playEnableButton.setOnClickListener(new OnPlayEnableButtonClickListener(catalog)); //复读开关单击事件
 
         //没有解释的目录，关闭详解按钮
@@ -622,6 +625,47 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
         public void onClick(View v) {
             getBook().resetAudioPlayEnable(getCatalog()); //重置语音播放开关
             notifyDataSetChanged(); //刷新
+        }
+
+        /**
+         * 获取目录
+         *
+         * @return 目录
+         */
+        private IBookCatalog getCatalog() {
+            return m.catalog;
+        }
+
+        /**
+         * 私有字段类
+         */
+        private class Field {
+            /**
+             * 有声书内容
+             */
+            IBookCatalog catalog;
+        }
+    }
+
+    /**
+     * 显示按钮单击事件监听器
+     */
+    private class OnDisplayButtonClickListener implements View.OnClickListener {
+        private Field m = new Field(); //私有字段
+
+        /**
+         * 构造器
+         * @param catalog 目录
+         */
+        public OnDisplayButtonClickListener(IBookCatalog catalog) {
+            m.catalog = catalog; //目录
+        }
+
+        @Override
+        public void onClick(View v) {
+            getBook().setCurrentPage(getCatalog().getPageNumber()); //重置当前显示页
+            Intent intent = new Intent(getContext(), PageActivity.class);
+            getContext().startActivity(intent);
         }
 
         /**
