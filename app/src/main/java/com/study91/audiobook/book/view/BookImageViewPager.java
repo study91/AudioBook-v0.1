@@ -80,8 +80,7 @@ public class BookImageViewPager extends ViewPager {
      * @return 当前打开的书
      */
     private IBook getBook() {
-        IUser user = SystemManager.getUser(getContext()); //获取全局用户
-        return user.getCurrentBook();
+        return SystemManager.getUser(getContext()).getCurrentBook();
     }
 
     /**
