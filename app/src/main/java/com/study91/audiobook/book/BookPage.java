@@ -65,19 +65,26 @@ class BookPage implements IBookPage {
     public IBookCatalog getCatalog() {
         IBookCatalog bookCatalog = null;
 
-        IBook book = getBook();
-        List<IBookCatalog> catalogs = book.getCatalogs();
+        List<IBookCatalog> catalogs = getBook().getCatalogs();
 
         //遍历查找当前页所属的目录
-        for (int i = catalogs.size(); i > 0; i--) {
-            IBookCatalog catalog = catalogs.get(i);
+//        for (int i = catalogs.size() - 1; i > 0; i--) {
+//            IBookCatalog catalog = catalogs.get(i);
+//            if (catalog.getPageNumber() <= getPageNumber()) {
+//                bookCatalog = catalog;
+//                break;
+//            }
+//        }
+
+        for (IBookCatalog catalog : catalogs) {
             if (catalog.getPageNumber() <= getPageNumber()) {
                 bookCatalog = catalog;
+            } else {
                 break;
             }
         }
 
-        return bookCatalog;
+       return bookCatalog;
     }
 
     @Override

@@ -1,23 +1,18 @@
 package com.study91.audiobook.ui;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
-import android.os.IBinder;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.RelativeLayout;
 
 import com.study91.audiobook.R;
 import com.study91.audiobook.book.IBook;
 import com.study91.audiobook.book.IBookCatalog;
-import com.study91.audiobook.book.view.BookImageViewPager;
 import com.study91.audiobook.media.IBookMediaPlayer;
+import com.study91.audiobook.media.MediaClient;
 import com.study91.audiobook.media.MediaService;
 import com.study91.audiobook.system.IConfig;
 import com.study91.audiobook.system.IPermission;
@@ -49,7 +44,7 @@ public class MainActivity extends Activity {
 
         //启动媒体服务
         startService(getMediaServiceIntent());
-        bindService(getMediaServiceIntent(), getMediaServiceConnection(), BIND_AUTO_CREATE);
+        getMediaClient().register();
 
         ui.rjYuWen1aButton = (Button) findViewById(R.id.rjYuWen1aButton); //显示页按钮
         ui.rjYuWen1aButton.setOnClickListener(new View.OnClickListener() {
@@ -62,15 +57,13 @@ public class MainActivity extends Activity {
                 IBookCatalog currentAudio = book.getCurrentAudio(); //获取当前语音目录
 
                 //设置语音文件
-                getMediaPlayer().setAudioFile(
+                IBookMediaPlayer mediaPlayer = getMediaClient().getMediaPlayer();
+                mediaPlayer.setAudioFile(
                         currentAudio.getAudioFilename(),
                         currentAudio.getTitle(),
                         currentAudio.getIconFilename());
-                getMediaPlayer().setSoundType(book.getSoundType());
-                getMediaPlayer().play();
-
-//                Intent intent = new Intent(getApplicationContext(), PageActivity.class);
-//                startActivity(intent);
+                mediaPlayer.setSoundType(book.getSoundType());
+                mediaPlayer.play();
             }
         });
 
@@ -85,61 +78,25 @@ public class MainActivity extends Activity {
                 IBookCatalog currentAudio = book.getCurrentAudio(); //获取当前语音目录
 
                 //设置语音文件
-                getMediaPlayer().setAudioFile(
+                IBookMediaPlayer mediaPlayer = getMediaClient().getMediaPlayer();
+                mediaPlayer.setAudioFile(
                         currentAudio.getAudioFilename(),
                         currentAudio.getTitle(),
                         currentAudio.getIconFilename());
-                getMediaPlayer().setSoundType(book.getSoundType());
-                getMediaPlayer().play();
-
-//                Intent intent = new Intent(getApplicationContext(), PageActivity.class);
-//                startActivity(intent);
+                mediaPlayer.setSoundType(book.getSoundType());
+                mediaPlayer.play();
             }
         });
 
-//        ui.fullLayout = (RelativeLayout) findViewById(R.id.fullLayout); //全屏布局
-//        ui.fullLayout.removeAllViews(); //将全局布局移除所有视图
-//        ui.bookPageViewPager = new PageImageViewPager(getApplicationContext());
-//        ui.bookPageViewPager.setOnSingleTapListener(new OnSingleTapListener() {
-//            @Override
-//            public void onSingleTap() {
-//                Log.d("MainActivity", "ui.bookPageViewPager.setOnSingleTapListener");
-//            }
-//        });
-//
-//        ui.fullLayout.addView(ui.bookPageViewPager);
-//
-//        IBook1 book = BookManager.getCurrentBook(this);
+        m.mediaClient = new MediaClient(this);
+        m.mediaClient.register();
     }
 
     @Override
     protected void onDestroy() {
-        unbindService(m.mediaServiceConnection);
+        getMediaClient().unregister();
         stopService(m.mediaServiceIntent);
         super.onDestroy();
-    }
-
-    /**
-     * 获取媒体服务Connection
-     * @return 媒体服务Connection
-     */
-    private ServiceConnection getMediaServiceConnection() {
-        if (m.mediaServiceConnection == null) {
-            m.mediaServiceConnection = new ServiceConnection() {
-                @Override
-                public void onServiceConnected(ComponentName name, IBinder service) {
-                    MediaService.MediaServiceBinder binder = (MediaService.MediaServiceBinder) service;
-                    m.mediaPlayer = binder.getMediaPlayer();
-                }
-
-                @Override
-                public void onServiceDisconnected(ComponentName name) {
-
-                }
-            };
-        }
-
-        return m.mediaServiceConnection;
     }
 
     /**
@@ -155,11 +112,15 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * 获取媒体播放器
-     * @return 媒体播放器
+     * 获取媒体客户端
+     * @return 媒体客户端
      */
-    private IBookMediaPlayer getMediaPlayer() {
-        return m.mediaPlayer;
+    private MediaClient getMediaClient() {
+        if (m.mediaClient == null) {
+            m.mediaClient = new MediaClient(this);
+        }
+
+        return m.mediaClient;
     }
 
     /**
@@ -172,30 +133,15 @@ public class MainActivity extends Activity {
         Intent mediaServiceIntent;
 
         /**
-         * 媒体服务连接
+         * 媒体客户端
          */
-        ServiceConnection mediaServiceConnection;
-
-        /**
-         * 媒体播放器
-         */
-        IBookMediaPlayer mediaPlayer;
+        MediaClient mediaClient;
     }
 
     /**
      * 私有界面类
      */
     private class UI {
-        /**
-         * 全屏布局
-         */
-        RelativeLayout fullLayout;
-
-        /**
-         * 有声书页视图页
-         */
-        BookImageViewPager bookPageViewPager;
-
         Button rjYuWen1aButton;
         Button rjYuWen1bButton;
 

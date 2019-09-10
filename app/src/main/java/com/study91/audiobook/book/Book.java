@@ -312,6 +312,30 @@ class Book implements IBook {
     }
 
     @Override
+    public IBookPage getCurrentAudioPage(long position) {
+        IBookPage audioPage = null;
+
+        List<IBookPage> pages = getPages(); //获取页集合
+        String audioFilename = getCurrentAudio().getAudioFilename();
+
+        //遍历查找当前语音页
+        for (IBookPage page : pages) {
+            //只对有语音且语音文件与页语音文件相同的页进行判断
+            if (page.hasAudio() && page.getAudioFilename().equals(audioFilename)) {
+                if (page.getAudioStartTime() <= position) {
+                    //找到最后一个小于时间参数的内容
+                    audioPage = page;
+                } else {
+                    //如果开始时间大于时间参数，退出循环
+                    break;
+                }
+            }
+        }
+
+        return audioPage;
+    }
+
+    @Override
     public IBookCatalog getNextAudio() {
         IBookCatalog nextAudio = null;
 

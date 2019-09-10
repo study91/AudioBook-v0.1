@@ -1,12 +1,8 @@
 package com.study91.audiobook.media.view;
 
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.os.IBinder;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,9 +14,8 @@ import android.widget.TextView;
 
 import com.study91.audiobook.R;
 import com.study91.audiobook.book.IBook;
-import com.study91.audiobook.dict.ReceiverAction;
 import com.study91.audiobook.media.IBookMediaPlayer;
-import com.study91.audiobook.media.MediaService;
+import com.study91.audiobook.media.MediaClient;
 import com.study91.audiobook.system.SystemManager;
 import com.study91.audiobook.tools.MediaTools;
 import com.study91.audiobook.ui.PageActivity;
@@ -41,6 +36,9 @@ public class MediaPlayerView extends RelativeLayout {
         LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         layoutInflater.inflate(R.layout.media_player_view, this);
 
+        getMediaClient().register(); //注册媒体客户端
+        getMediaClient().setOnReceiver(new OnMediaClientBroadcastReceiver()); //设置媒体客户端广播接收器
+
         //载入界面控件
         ui.audioPositionTextView = (TextView) findViewById(R.id.audioPositionTextView); //语音位置文本框
         ui.audioLengthTextView = (TextView) findViewById(R.id.audioLengthTextView); //语音长度文本框
@@ -58,11 +56,9 @@ public class MediaPlayerView extends RelativeLayout {
         //设置事件监听器
         ui.iconImageView.setOnClickListener(new OnIconClickListener()); //图标单击
         ui.audioTitleTextView.setOnClickListener(new OnTitleClickListener()); //标题单击
+        ui.bookNameTextView.setOnClickListener(new OnTitleClickListener()); //书名单击
 
 //        if(isInEditMode()) return; //解决可视化编辑器无法识别自定义控件的问题（此语句现在可以不用）
-
-        bindMediaService(); //绑定媒体服务
-        registerMediaBroadcastsReceiver(); //注册媒体广播接收器
 
         //设置控件事件
         ui.playButton.setOnClickListener(new OnPlayButtonClickListener()); //播放按钮单击事件
@@ -72,100 +68,8 @@ public class MediaPlayerView extends RelativeLayout {
 
     @Override
     protected void onDetachedFromWindow() {
-        unregisterMediaBroadcastReceiver(); //注销媒体广播接收器
-        unbindMediaService(); //取消媒体服务绑定
+        getMediaClient().unregister(); //注销媒体客户端
         super.onDetachedFromWindow();
-    }
-
-    /**
-     * 获取媒体播放器
-     * @return 媒体播放器
-     */
-    private IBookMediaPlayer getMediaPlayer() {
-        return m.mediaPlayer;
-    }
-
-    /**
-     * 绑定媒体服务
-     */
-    private void bindMediaService() {
-        //创建媒体服务Intent
-        Intent intent = new Intent(getContext(), MediaService.class);
-
-        //实例化媒体服务连接
-        m.mediaServiceConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                MediaService.MediaServiceBinder binder = (MediaService.MediaServiceBinder) service;
-                m.mediaPlayer = binder.getMediaPlayer();
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-
-            }
-        };
-
-        //绑定媒体服务
-        getContext().bindService(intent, m.mediaServiceConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    /**
-     * 取消媒体服务绑定
-     */
-    private void unbindMediaService() {
-        getContext().unbindService(m.mediaServiceConnection);
-    }
-
-    /**
-     * 注册媒体广播接收器
-     */
-    private void registerMediaBroadcastsReceiver() {
-        if (m.mediaBroadcastReceiver == null) {
-            m.mediaBroadcastReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    //MediaService.MediaServiceBinder binder = getMediaServiceBinder(); //媒体服务绑定
-
-                    ui.audioPositionTextView.setText(MediaTools.parseTime(getMediaPlayer().getPosition())); //设置语音位置文本
-                    ui.audioLengthTextView.setText(MediaTools.parseTime(getMediaPlayer().getLength())); //设置语音长度文本
-                    ui.audioSeekBar.setMax(getMediaPlayer().getLength()); //设置语音进度条最大值
-                    ui.audioSeekBar.setProgress(getMediaPlayer().getPosition()); //设置语音进度条播放位置
-
-                    //设置书名称
-                    IBook book = SystemManager.getUser(getContext()).getCurrentBook();
-                    ui.bookNameTextView.setText("【" + book.getBookName() + "】");
-
-                    //设置标题内容
-                    String title = getMediaPlayer().getAudioTitle().trim().replace("　", "");
-                    ui.audioTitleTextView.setText(title);
-
-                    //设置图标
-                    if (getMediaPlayer().getIconDrawable() != null) {
-                        ui.iconImageView.setImageDrawable(getMediaPlayer().getIconDrawable());
-                    }
-
-                    //设置播放图标
-                    if (getMediaPlayer().isPlaying()) {
-                        ui.playButton.setBackgroundResource(R.drawable.media_player_pause);
-                    } else {
-                        ui.playButton.setBackgroundResource(R.drawable.media_player_play);
-                    }
-                }
-            };
-
-            IntentFilter intentFilter = new IntentFilter(ReceiverAction.CLIENT.toString());
-            getContext().registerReceiver(m.mediaBroadcastReceiver, intentFilter);
-        }
-    }
-
-    /**
-     * 注销媒体广播接收器
-     */
-    private void unregisterMediaBroadcastReceiver() {
-        if (m.mediaBroadcastReceiver != null) {
-            getContext().unregisterReceiver(m.mediaBroadcastReceiver);
-        }
     }
 
     /**
@@ -174,6 +78,18 @@ public class MediaPlayerView extends RelativeLayout {
     private void showPage() {
         Intent intent = new Intent(getContext(), PageActivity.class);
         getContext().startActivity(intent);
+    }
+
+    /**
+     * 获取媒体客户端
+     * @return 媒体客户端
+     */
+    private MediaClient getMediaClient() {
+        if (m.mediaClient == null) {
+            m.mediaClient = new MediaClient(getContext());
+        }
+
+        return m.mediaClient;
     }
 
     /**
@@ -202,10 +118,12 @@ public class MediaPlayerView extends RelativeLayout {
     private class OnPlayButtonClickListener implements OnClickListener {
         @Override
         public void onClick(View v) {
-            if (getMediaPlayer().isPlaying()) {
-                getMediaPlayer().pause();
+            IBookMediaPlayer mediaPlayer = getMediaClient().getMediaPlayer();
+
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
             } else {
-                getMediaPlayer().play();
+                mediaPlayer.play();
             }
         }
     }
@@ -229,7 +147,8 @@ public class MediaPlayerView extends RelativeLayout {
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             if (fromUser) {
-                getMediaPlayer().seekTo(progress);
+
+                getMediaClient().getMediaPlayer().seekTo(progress);
             }
         }
 
@@ -245,23 +164,48 @@ public class MediaPlayerView extends RelativeLayout {
     }
 
     /**
+     * 媒体客户端广播接收器
+     */
+    private class OnMediaClientBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            IBookMediaPlayer mediaPlayer = getMediaClient().getMediaPlayer(); //获取媒体播放器
+
+            ui.audioPositionTextView.setText(MediaTools.parseTime(mediaPlayer.getPosition())); //设置语音位置文本
+            ui.audioLengthTextView.setText(MediaTools.parseTime(mediaPlayer.getLength())); //设置语音长度文本
+            ui.audioSeekBar.setMax(mediaPlayer.getLength()); //设置语音进度条最大值
+            ui.audioSeekBar.setProgress(mediaPlayer.getPosition()); //设置语音进度条播放位置
+
+            //设置书名称
+            IBook book = SystemManager.getUser(getContext()).getCurrentBook();
+            ui.bookNameTextView.setText("【" + book.getBookName() + "】");
+
+            //设置标题内容
+            String title = mediaPlayer.getAudioTitle().trim().replace("　", "");
+            ui.audioTitleTextView.setText(title);
+
+            //设置图标
+            if (mediaPlayer.getIconDrawable() != null) {
+                ui.iconImageView.setImageDrawable(mediaPlayer.getIconDrawable());
+            }
+
+            //设置播放图标
+            if (mediaPlayer.isPlaying()) {
+                ui.playButton.setBackgroundResource(R.drawable.media_player_pause);
+            } else {
+                ui.playButton.setBackgroundResource(R.drawable.media_player_play);
+            }
+        }
+    }
+
+    /**
      * 私有字段类
      */
     private class Field {
         /**
-         * 媒体服务连接
+         * 媒体客户端
          */
-        ServiceConnection mediaServiceConnection;
-
-        /**
-         * 媒体广播接收器
-         */
-        BroadcastReceiver mediaBroadcastReceiver;
-
-        /**
-         * 媒体播放器
-         */
-        IBookMediaPlayer mediaPlayer;
+        MediaClient mediaClient;
     }
 
     /**

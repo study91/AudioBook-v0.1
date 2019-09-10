@@ -125,6 +125,9 @@ class AssetMediaPlayer implements IMediaPlayer {
             case PREPARED:  //媒体准备就绪
                 getMediaPlayer().seekTo(position);
                 break;
+            case PREPARING: //媒体准备中
+                m.seekToPosition = position;
+                break;
         }
     }
 
@@ -225,6 +228,12 @@ class AssetMediaPlayer implements IMediaPlayer {
             m.mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
+                    //如果播放位置大于0，先进行定位
+                    if (m.seekToPosition > 0) {
+                        m.mediaPlayer.seekTo(m.seekToPosition); //定位播放位置
+                        m.seekToPosition = 0; //播放位置复位
+                    }
+
                     switch (getMediaState()) {
                         case WAITING_TO_PLAY: //等待播放媒体
                             m.mediaState = MediaState.PREPARED; //设置媒体状态为准备就绪
@@ -338,6 +347,11 @@ class AssetMediaPlayer implements IMediaPlayer {
          * 图标Drawable
          */
         Drawable iconDrawable;
+
+        /**
+         * 定位位置
+         */
+        int seekToPosition;
 
         /**
          * 标题

@@ -2,14 +2,10 @@ package com.study91.audiobook.ui;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -22,9 +18,8 @@ import com.study91.audiobook.book.IBookCatalog;
 import com.study91.audiobook.book.IBookPage;
 import com.study91.audiobook.book.view.BookImageViewPager;
 import com.study91.audiobook.book.view.OnSingleTapListener;
-import com.study91.audiobook.dict.ReceiverAction;
 import com.study91.audiobook.media.IBookMediaPlayer;
-import com.study91.audiobook.media.MediaService;
+import com.study91.audiobook.media.MediaClient;
 import com.study91.audiobook.media.view.MediaPlayerView;
 import com.study91.audiobook.system.SystemManager;
 
@@ -43,6 +38,9 @@ public class PageActivity extends Activity implements View.OnClickListener {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); //不关屏
 
         setContentView(R.layout.activity_page);
+
+        getMediaClient().register(); //注册媒体客户端
+        getMediaClient().setOnReceiver(new OnMediaClientBroadcastReceiver()); //设置媒体客户端广播接收器
 
         //全屏布局
         ui.fullLayout = (RelativeLayout) findViewById(R.id.fullLayout);
@@ -76,15 +74,11 @@ public class PageActivity extends Activity implements View.OnClickListener {
         });
 
         ui.fullLayout.addView(ui.bookImageViewPager);
-
-        bindMediaService(); //绑定媒体服务
-        registerMediaBroadcastsReceiver(); //注册媒体广播接收器
     }
 
     @Override
     protected void onDestroy() {
-        unregisterMediaBroadcastReceiver(); //注销媒体广播接收器
-        unbindMediaService(); //取消媒体服务绑定
+        getMediaClient().unregister(); //注销媒体客户端
         super.onDestroy();
     }
 
@@ -95,11 +89,45 @@ public class PageActivity extends Activity implements View.OnClickListener {
                 finish();
                 break;
             case R.id.playButton: //播放按钮
+                play();
                 break;
             case R.id.catalogButton: //目录按钮
                 Intent intent = new Intent(this, CatalogActivity.class);
                 startActivity(intent);
                 break;
+        }
+    }
+
+    /**
+     * 播放
+     */
+    private void play() {
+        IBookMediaPlayer mediaPlayer = getMediaClient().getMediaPlayer(); //媒体播放器
+        IBookPage currentAudioPage = getBook().getCurrentAudioPage(mediaPlayer.getPosition()); //当前语音页
+        IBookPage currentPage = getBook().getCurrentPage();
+
+        if (currentPage.getPageNumber() == currentAudioPage.getPageNumber()) {
+            //当前页是当前语音页
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.pause(); //暂停播放
+            } else {
+                mediaPlayer.play(); //播放
+            }
+        } else {
+            //当前页不是当前语音页
+            if (!currentPage.getAudioFilename().equals(currentAudioPage.getAudioFilename())) {
+                IBookCatalog catalog = currentPage.getCatalog(); //当前页所属目录
+                getBook().setCurrentAudio(catalog); //重置当前语音目录
+
+                //重置播放文件
+                mediaPlayer.setAudioFile(
+                        catalog.getAudioFilename(),
+                        catalog.getTitle(),
+                        catalog.getIconFilename());
+            }
+
+            mediaPlayer.seekTo((int)currentPage.getAudioStartTime()); //定位播放位置
+            mediaPlayer.play(); //播放
         }
     }
 
@@ -130,76 +158,51 @@ public class PageActivity extends Activity implements View.OnClickListener {
     }
 
     /**
-     * 绑定媒体服务
+     * 获取全局书
+     * @return 全局书
      */
-    private void bindMediaService() {
-        //创建媒体服务Intent
-        Intent intent = new Intent(this, MediaService.class);
-
-        //实例化媒体服务连接
-        m.mediaServiceConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                MediaService.MediaServiceBinder binder = (MediaService.MediaServiceBinder) service;
-                m.bookMediaPlayer = binder.getMediaPlayer();
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-
-            }
-        };
-
-        //绑定媒体服务
-        bindService(intent, m.mediaServiceConnection, Context.BIND_AUTO_CREATE);
+    private IBook getBook() {
+        return SystemManager.getUser(this).getCurrentBook();
     }
 
     /**
-     * 取消媒体服务绑定
+     * 获取媒体客户端
+     * @return 媒体客户端
      */
-    private void unbindMediaService() {
-        unbindService(m.mediaServiceConnection);
-    }
-
-    /**
-     * 注册媒体广播接收器
-     */
-    private void registerMediaBroadcastsReceiver() {
-        if (m.mediaBroadcastReceiver == null) {
-            m.mediaBroadcastReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    //TODO 接收广播代码
-                    ui.playButton.setVisibility(View.VISIBLE);
-                    ui.playButton.setBackgroundResource(R.drawable.button_play); //设置播放图示
-
-                    IBook book = SystemManager.getUser(getApplicationContext()).getCurrentBook();
-                    IBookCatalog currentAudio = book.getCurrentAudio();
-                    IBookPage currentPage = book.getCurrentPage();
-                    boolean isPlaying = m.bookMediaPlayer.isPlaying();
-
-                    if (currentAudio.getAudioFilename().equals(currentPage.getAudioFilename()) && isPlaying) {
-                        ui.playButton.setBackgroundResource(R.drawable.button_pause);
-                    }
-
-                    //判断是否显示播放按钮
-                    if (!currentPage.hasAudio()) {
-                        ui.playButton.setVisibility(View.GONE);
-                    }
-                }
-            };
-
-            IntentFilter intentFilter = new IntentFilter(ReceiverAction.CLIENT.toString());
-            registerReceiver(m.mediaBroadcastReceiver, intentFilter);
+    private MediaClient getMediaClient() {
+        if (m.mediaClient == null) {
+            m.mediaClient = new MediaClient(this);
         }
+
+        return m.mediaClient;
     }
 
     /**
-     * 注销媒体广播接收器
+     * 媒体客户端广播接收器
      */
-    private void unregisterMediaBroadcastReceiver() {
-        if (m.mediaBroadcastReceiver != null) {
-            unregisterReceiver(m.mediaBroadcastReceiver);
+    private class OnMediaClientBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            IBook book = SystemManager.getUser(getApplicationContext()).getCurrentBook(); //书
+            IBookMediaPlayer mediaPlayer = getMediaClient().getMediaPlayer(); //媒体播放器
+
+            IBookPage currentPage = book.getCurrentPage(); //当前页
+            IBookPage currentAudioPage = book.getCurrentAudioPage(mediaPlayer.getPosition()); //当前语音页
+            boolean isPlaying = mediaPlayer.isPlaying(); //是否正在播放
+
+            //设置播放图标
+            if (isPlaying && currentPage.getPageNumber() == currentAudioPage.getPageNumber()) {
+                ui.playButton.setBackgroundResource(R.drawable.button_pause); //设置为暂停图标
+            } else {
+                ui.playButton.setBackgroundResource(R.drawable.button_play); //设置播放图标
+            }
+
+            //判断是否显示播放按钮
+            if (!currentPage.hasAudio()) {
+                ui.playButton.setVisibility(View.GONE); //不显示播放按钮
+            } else {
+                ui.playButton.setVisibility(View.VISIBLE); //显示播放按钮
+            }
         }
     }
 
@@ -213,19 +216,9 @@ public class PageActivity extends Activity implements View.OnClickListener {
         boolean hasToolbar = true;
 
         /**
-         * 媒体服务连接
+         * 媒体客户端
          */
-        ServiceConnection mediaServiceConnection;
-
-        /**
-         * 媒体广播接收器
-         */
-        BroadcastReceiver mediaBroadcastReceiver;
-
-        /**
-         * 书媒体播放器
-         */
-        IBookMediaPlayer bookMediaPlayer;
+        MediaClient mediaClient;
     }
 
     /**

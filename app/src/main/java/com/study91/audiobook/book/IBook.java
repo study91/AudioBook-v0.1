@@ -133,6 +133,13 @@ public interface IBook {
     IBookCatalog getCurrentAudio();
 
     /**
+     * 获取当前语音页
+     * @param position 语音位置
+     * @return 当前语音页
+     */
+    IBookPage getCurrentAudioPage(long position);
+
+    /**
      * 获取下一个语音目录
      * @return 下一个语音目录
      */

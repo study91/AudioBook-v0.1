@@ -1,11 +1,7 @@
 package com.study91.audiobook.media.view;
 
 import android.app.Dialog;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.IBinder;
 import android.util.DisplayMetrics;
 import android.view.Surface;
 import android.view.View;
@@ -16,8 +12,7 @@ import android.widget.TextView;
 
 import com.study91.audiobook.R;
 import com.study91.audiobook.dict.SoundType;
-import com.study91.audiobook.media.IBookMediaPlayer;
-import com.study91.audiobook.media.MediaService;
+import com.study91.audiobook.media.MediaClient;
 import com.study91.audiobook.system.IUser;
 import com.study91.audiobook.system.SystemManager;
 
@@ -36,7 +31,7 @@ class VolumeDialog extends Dialog {
     VolumeDialog(Context context, int themeResId) {
         super(context, themeResId);
         setContentView(R.layout.volume_dialog); //加载对话框布局
-        bindMediaService(); //绑定媒体服务
+        getMediaClient().register(); //注册媒体客户端
     }
 
     @Override
@@ -89,7 +84,7 @@ class VolumeDialog extends Dialog {
         ui.musicLayout = (RelativeLayout) findViewById(R.id.musicLayout); //背景音乐布局
 
         //只有语音时，不显示背景音乐音量拖动条
-        if (getMediaPlayer().getSoundType() == SoundType.ONLY_AUDIO) {
+        if (getMediaClient().getMediaPlayer().getSoundType() == SoundType.ONLY_AUDIO) {
             ui.musicLayout.setVisibility(View.GONE);
         }
     }
@@ -97,48 +92,8 @@ class VolumeDialog extends Dialog {
     @Override
     protected void onStop() {
         if(hasChanged()) getUser().update(); //更新配置
-        unbindMediaService(); //取消媒体服务绑定
+        getMediaClient().unregister(); //注销媒体客户端
         super.onStop();
-    }
-
-    /**
-     * 获取媒体播放器
-     * @return 媒体播放器
-     */
-    private IBookMediaPlayer getMediaPlayer() {
-        return m.mediaPlayer;
-    }
-
-    /**
-     * 绑定媒体服务
-     */
-    private void bindMediaService() {
-        //创建媒体服务Intent
-        Intent intent = new Intent(getContext(), MediaService.class);
-
-        //实例化媒体服务连接
-        m.mediaServiceConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                MediaService.MediaServiceBinder binder = (MediaService.MediaServiceBinder) service;
-                m.mediaPlayer = binder.getMediaPlayer();
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-
-            }
-        };
-
-        //绑定媒体服务
-        getContext().bindService(intent, m.mediaServiceConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    /**
-     * 取消媒体服务绑定
-     */
-    private void unbindMediaService() {
-        getContext().unbindService(m.mediaServiceConnection);
     }
 
     /**
@@ -158,13 +113,25 @@ class VolumeDialog extends Dialog {
     }
 
     /**
+     * 获取媒体客户端
+     * @return 媒体客户端
+     */
+    private MediaClient getMediaClient() {
+        if (m.mediaClient == null) {
+            m.mediaClient = new MediaClient(getContext());
+        }
+
+        return m.mediaClient;
+    }
+
+    /**
      * 语音音量拖动条改变事件监听器
      */
     private class OnAudioVolumeSeekBarChangeListener implements SeekBar.OnSeekBarChangeListener {
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             float volume = ((float)ui.audioVolumeSeekBar.getProgress()) / 100; //获取进度条语音音量值
-            getMediaPlayer().setAudioVolume(volume); //设置媒体播放器语音音量
+            getMediaClient().getMediaPlayer().setAudioVolume(volume); //设置媒体播放器语音音量
             getUser().setAudioVolume(volume); //设置全局配置语音音量
 
             //刷新语音音量值
@@ -188,7 +155,7 @@ class VolumeDialog extends Dialog {
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             float volume = ((float)ui.musicVolumeSeekBar.getProgress()) / 100; //获取进度条背景音乐音量值
-            getMediaPlayer().setMusicVolume(volume); //设置媒体播放器背景音乐音量
+            getMediaClient().getMediaPlayer().setMusicVolume(volume); //设置媒体播放器背景音乐音量
             getUser().setMusicVolume(volume); //设置全局配置背景音乐音量
 
             //刷新背景音乐音量值
@@ -215,14 +182,9 @@ class VolumeDialog extends Dialog {
         boolean changed = false;
 
         /**
-         * 媒体服务连接
+         * 媒体客户端
          */
-        ServiceConnection mediaServiceConnection;
-
-        /**
-         * 媒体播放器
-         */
-        IBookMediaPlayer mediaPlayer;
+        MediaClient mediaClient;
     }
 
     /**
