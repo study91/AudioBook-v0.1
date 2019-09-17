@@ -40,6 +40,12 @@ public interface IBookCatalog {
     int getPageNumber();
 
     /**
+     * 获取目录页
+     * @return 目录页
+     */
+    IBookPage getPage();
+
+    /**
      * 获取目录标题
      * @return 目录标题
      */

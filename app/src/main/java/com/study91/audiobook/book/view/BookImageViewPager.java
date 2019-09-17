@@ -14,7 +14,6 @@ import android.view.ViewGroup;
 import com.study91.audiobook.book.IBook;
 import com.study91.audiobook.book.IBookPage;
 import com.study91.audiobook.media.MediaClient;
-import com.study91.audiobook.system.IUser;
 import com.study91.audiobook.system.SystemManager;
 
 /**
@@ -69,7 +68,7 @@ public class BookImageViewPager extends ViewPager {
      */
     private void init() {
         getMediaClient().register(); //注册媒体客户端
-        getMediaClient().setOnReceiver(new OnMediaClientBroadcastReceiver()); //设置媒体客户端广播接收器
+//        getMediaClient().setOnReceiver(new OnMediaClientBroadcastReceiver()); //设置媒体客户端广播接收器
         setAdapter(new BookImageViewPagerAdapter()); //设置适配器
         setCurrentItem(getBook().getCurrentPage().getPosition()); //设置当前显示页
         addOnPageChangeListener(new OnBookPageChangeListener()); //添加页改变事件监听器
@@ -153,7 +152,7 @@ public class BookImageViewPager extends ViewPager {
 
             //如果页码有变化，重置当前页
             if (getBook().getCurrentPage().getPageNumber() != currentPage.getPageNumber()) {
-                getBook().setCurrentPage(currentPage.getPageNumber());
+                getBook().setCurrentPage(currentPage);
             }
         }
 
@@ -164,7 +163,7 @@ public class BookImageViewPager extends ViewPager {
     }
 
     /**
-     * 媒体客户端广播接收器
+     * TODO 媒体客户端广播接收器可以删除
      */
     private class OnMediaClientBroadcastReceiver extends BroadcastReceiver {
         @Override

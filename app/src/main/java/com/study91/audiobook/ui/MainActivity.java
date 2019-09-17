@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 
 import com.study91.audiobook.R;
 import com.study91.audiobook.book.IBook;
@@ -88,6 +89,8 @@ public class MainActivity extends Activity {
             }
         });
 
+        ui.fullLayout = (RelativeLayout) findViewById(R.id.fullLayout); //全屏布局
+
         m.mediaClient = new MediaClient(this);
         m.mediaClient.register();
     }
@@ -142,8 +145,8 @@ public class MainActivity extends Activity {
      * 私有界面类
      */
     private class UI {
+        RelativeLayout fullLayout;
         Button rjYuWen1aButton;
         Button rjYuWen1bButton;
-
     }
 }

@@ -164,14 +164,20 @@ public interface IBook {
     void resetAudioPlayEnable(IBookCatalog catalog);
 
     /**
-     * 设置当前显示页
+     * 设置当前页
      * @param pageNumber 页码
      */
-    void setCurrentPage(int pageNumber);
+//    void setCurrentPage(int pageNumber);
 
     /**
-     * 获取当前显示页
-     * @return 当前显示页
+     * 设置当前页
+     * @param page 页
+     */
+    void setCurrentPage(IBookPage page);
+
+    /**
+     * 获取当前页
+     * @return 当前页
      */
     IBookPage getCurrentPage();
 

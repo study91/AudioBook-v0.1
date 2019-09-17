@@ -7,13 +7,16 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> <!-- 安卓8.0以后版本必须添加REQUEST_INSTALL_PACKAGES，否则会安装不上 -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- 解决内存溢出问题：添加 android:largeHeap="true" 申请更多内存，暂时解决方案-->
     <application
         android:allowBackup="true"
+        android:largeHeap="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:ignore="AllowBackup,GoogleAppIndexingWarning">
 
         <!-- 主活动 -->
         <activity

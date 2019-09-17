@@ -70,6 +70,22 @@ class BookCatalog implements IBookCatalog {
     }
 
     @Override
+    public IBookPage getPage() {
+        IBookPage page = null;
+
+        //遍历查找目录页
+        List<IBookPage> pages = getBook().getPages();
+        for (IBookPage bookPage : pages) {
+            if (bookPage.getPageNumber() == getPageNumber()) {
+                page = bookPage;
+                break;
+            }
+        }
+
+        return page;
+    }
+
+    @Override
     public String getTitle() {
         return m.title;
     }

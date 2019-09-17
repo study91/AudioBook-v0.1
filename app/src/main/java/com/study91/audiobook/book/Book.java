@@ -287,7 +287,7 @@ class Book implements IBook {
         //缓存的当前语音索引不等于参数语音目录索引时执行
         if (m.currentAudioIndex != catalog.getIndex()) {
             m.currentAudioIndex = catalog.getIndex(); //缓存当前语音索引
-            updateCurrentAudio(catalog.getIndex()); //更新当前语音
+            updateCurrentAudio(); //更新当前语音
         }
 
         //目录不充许播放时，将目录设置为复读起点和复读终点
@@ -307,24 +307,28 @@ class Book implements IBook {
         if (m.currentAudio == null || m.currentAudioIndex != m.currentAudio.getIndex()) {
             List<IBookCatalog> catalogs = getCatalogs(); //获取目录列表
 
+            IBookCatalog currentAudio = null; //当前语音变量
+            IBookCatalog initAudio = null; //初始语音变量
+
             //遍历检查所有目录
             for (IBookCatalog catalog : catalogs) {
-                if (catalog.getIndex() <= m.currentAudioIndex) {
-                    //目录索引小于或等于当前语音目录索引时执行（表示当前语音目录存在）
-                    if (catalog.hasAudio() && catalog.allowPlayAudio() &&
-                            catalog.getIndex() == m.currentAudioIndex) {
-                        m.currentAudio = catalog;
-                        break;
-                    }
-                } else {
-                    //目录索引大于当前语音目录索引时执行（表示当前语音目录不存在）
-                    if (catalog.hasAudio() && catalog.allowPlayAudio()) {
-                        m.currentAudio = catalog;
-                        setCurrentAudio(catalog); //重置当前语音
-                        break;
+                //只对有语音且充许播放的目录进行检查
+                if (catalog.hasAudio() && catalog.allowPlayAudio()) {
+                    //如果初始语音为null，将第一个语音赋值给初始语音
+                    if (initAudio == null) initAudio = catalog;
+
+                    if (catalog.getIndex() <= m.currentAudioIndex) {
+                        //小于当前语音索引的目录赋值给当前语音变量
+                        currentAudio = catalog;
+                    } else {
+                        //找不到当前语音索引的目录时，将第一个语音赋值给当前语音目录
+                        if (currentAudio == null) currentAudio = initAudio;
+                        break; //大于当前语音索引时退出遍历
                     }
                 }
             }
+
+            setCurrentAudio(currentAudio); //重置当前语音（必须进行重置）
         }
 
         return m.currentAudio;
@@ -335,7 +339,7 @@ class Book implements IBook {
         IBookPage audioPage = null;
 
         List<IBookPage> pages = getPages(); //获取页集合
-        String audioFilename = getCurrentAudio().getAudioFilename();
+        String audioFilename = getCurrentAudio().getAudioFilename(); //当前语音文件名
 
         //遍历查找当前语音页
         for (IBookPage page : pages) {
@@ -557,46 +561,33 @@ class Book implements IBook {
     }
 
     @Override
-    public void setCurrentPage(int pageNumber) {
-        if (pageNumber != m.currentPageNumber) {
-            m.currentPageNumber = pageNumber; //缓存当前页码
-
-            IData data = null; //数据对象
-
-            try {
-                IConfig config = SystemManager.getConfig(getContext()); //获取全局配置
-                data = DataManager.createData(config.getBookDataSource()); //创建数据对象
-
-                //更新数据库
-                String sql = "UPDATE [Book] " +
-                        "SET [CurrentPage] = " + m.currentPageNumber + " " +
-                        "WHERE [BookID] = " + getBookID();
-                data.execute(sql); //执行更新
-            } finally {
-                if(data != null) data.close(); //关闭数据对象
-            }
+    public void setCurrentPage(IBookPage page) {
+        if (getCurrentPageNumber() != page.getPageNumber()) {
+            //如果当前页码与缓存的当前页码不同时才重新设置当前页
+            m.currentPageNumber = page.getPageNumber();
+            m.currentPage = page; //赋值当前页
+            updateCurrentPage(); //更新当前页
         }
     }
 
     @Override
     public IBookPage getCurrentPage() {
         //当前显示页为null或缓存当前页码（m.currentPageNumber）与当前显示页码不同时执行
-        if (m.currentPage == null || m.currentPageNumber != m.currentPage.getPageNumber()) {
+        if (m.currentPage == null || getCurrentPageNumber() != m.currentPage.getPageNumber()) {
             List<IBookPage> pages = getPages(); //获取页集合
 
-            //遍历查找当前显示页
+            //遍历查找当前页
             for (IBookPage page : pages) {
                 //找到当前页时，退出遍历
-                if (page.getPageNumber() == m.currentPageNumber) {
-                    m.currentPage = page;
+                if (page.getPageNumber() == getCurrentPageNumber()) {
+                    setCurrentPage(page); //重置当前页
                     break;
                 }
             }
 
             //如果没有找到当前页，将第一页设置为当前页
             if (m.currentPage == null) {
-                m.currentPage = pages.get(0);
-                setCurrentPage(m.currentPage.getPageNumber()); //重置当前页
+                setCurrentPage(pages.get(0)); //重置当前页
             }
         }
 
@@ -754,6 +745,78 @@ class Book implements IBook {
     }
 
     /**
+     * 获取当前页码
+     * @return 当前页码
+     */
+    private int getCurrentPageNumber() {
+        return m.currentPageNumber;
+    }
+
+    /**
+     * 更新当前页
+     */
+    private void updateCurrentPage() {
+        //创建线程更新当前页
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                IData data = null; //数据对象
+
+                try {
+                    IConfig config = SystemManager.getConfig(getContext()); //获取全局配置
+                    data = DataManager.createData(config.getBookDataSource()); //创建数据对象
+
+                    //更新数据库
+                    String sql = "UPDATE [Book] " +
+                            "SET [CurrentPage] = " + m.currentPageNumber + " " +
+                            "WHERE [BookID] = " + getBookID();
+                    data.execute(sql); //执行更新
+                } finally {
+                    if(data != null) data.close(); //关闭数据对象
+                }
+            }
+        });
+
+        thread.start();
+    }
+
+    /**
+     * 获取当前语音索引
+     * @return 当前语音索引
+     */
+    private int getCurrentAudioIndex() {
+        return m.currentAudioIndex;
+    }
+
+    /**
+     * 更新当前语音
+     */
+    private void updateCurrentAudio() {
+        //创建线程更新当前语音
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                IData data = null; //数据对象
+
+                try {
+                    IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
+                    data = DataManager.createData(config.getBookDataSource()); //创建数据对象
+
+                    //更新数据库
+                    String sql = "UPDATE [Book] " +
+                            "SET [CurrentAudio] = " + getCurrentAudioIndex() + " " +
+                            "WHERE [BookID] = " + getBookID();
+                    data.execute(sql); //执行更新
+                } finally {
+                    if(data != null) data.close(); //关闭数据对象
+                }
+            }
+        });
+
+        thread.start();
+    }
+
+    /**
      * 载入
      * @param bookID 书ID
      */
@@ -801,26 +864,6 @@ class Book implements IBook {
             }
         } finally {
             if(cursor != null) cursor.close(); //关闭数据指针
-            if(data != null) data.close(); //关闭数据对象
-        }
-    }
-
-    /**
-     * 更新当前语音
-     * @param index 语音索引
-     */
-    private void updateCurrentAudio(int index) {
-        IData data = null; //数据对象
-
-        try {
-            IConfig config = SystemManager.getConfig(getContext()); //获取系统配置
-            data = DataManager.createData(config.getBookDataSource()); //创建数据对象
-
-            //更新数据库
-            String sql = "UPDATE [Book] SET [CurrentAudio] = " + index + " " +
-                    "WHERE [BookID] = " + getBookID();
-            data.execute(sql); //执行更新
-        } finally {
             if(data != null) data.close(); //关闭数据对象
         }
     }

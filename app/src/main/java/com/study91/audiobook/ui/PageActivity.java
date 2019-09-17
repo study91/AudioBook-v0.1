@@ -33,39 +33,26 @@ public class PageActivity extends Activity implements View.OnClickListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_page);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); //设置为竖屏显示
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); //不关屏
-
-        setContentView(R.layout.activity_page);
 
         getMediaClient().register(); //注册媒体客户端
         getMediaClient().setOnReceiver(new OnMediaClientBroadcastReceiver()); //设置媒体客户端广播接收器
 
-        //全屏布局
-        ui.fullLayout = (RelativeLayout) findViewById(R.id.fullLayout);
-        ui.fullLayout.removeAllViews();
+        //载入控件
+        ui.fullLayout = (RelativeLayout) findViewById(R.id.fullLayout); //全屏布局
+        ui.topLayout = (RelativeLayout) findViewById(R.id.topLayout); //顶部布局
+        ui.backButton = (Button) findViewById(R.id.backButton); //返回按钮
+        ui.playButton = (Button) findViewById(R.id.playButton); //播放按钮
+        ui.catalogButton = (Button) findViewById(R.id.catalogButton); //目录按钮
+        ui.mediaPlayerView = (MediaPlayerView) findViewById(R.id.mediaPlayerView); //媒体播放视图
+        ui.bookImageViewPager = new BookImageViewPager(this); //书图片视图页
 
-        //顶部布局
-        ui.topLayout = (RelativeLayout) findViewById(R.id.topLayout);
-
-        //返回按钮
-        ui.backButton = (Button) findViewById(R.id.backButton);
+        //设置控件
         ui.backButton.setOnClickListener(this);
-
-        //播放按钮
-        ui.playButton = (Button) findViewById(R.id.playButton);
         ui.playButton.setOnClickListener(this);
-
-        //目录按钮
-        ui.catalogButton = (Button) findViewById(R.id.catalogButton);
         ui.catalogButton.setOnClickListener(this);
-
-        //媒体播放视图
-        ui.mediaPlayerView = (MediaPlayerView) findViewById(R.id.mediaPlayerView);
-
-        //书图片视图页
-        ui.bookImageViewPager = new BookImageViewPager(this);
         ui.bookImageViewPager.setOnSingleTapListener(new OnSingleTapListener() {
             @Override
             public void onSingleTap() {
@@ -73,6 +60,7 @@ public class PageActivity extends Activity implements View.OnClickListener {
             }
         });
 
+        ui.fullLayout.removeAllViews();
         ui.fullLayout.addView(ui.bookImageViewPager);
     }
 
@@ -166,6 +154,14 @@ public class PageActivity extends Activity implements View.OnClickListener {
     }
 
     /**
+     * 获取当前页码
+     * @return 当前页码
+     */
+    private int getCurrentPageNumber() {
+        return m.currentPageNumber;
+    }
+
+    /**
      * 获取媒体客户端
      * @return 媒体客户端
      */
@@ -203,6 +199,12 @@ public class PageActivity extends Activity implements View.OnClickListener {
             } else {
                 ui.playButton.setVisibility(View.VISIBLE); //显示播放按钮
             }
+
+            //如果页码有变化，重置当前显示页
+            if (currentPage.getPageNumber() != getCurrentPageNumber()) {
+                m.currentPageNumber = currentPage.getPageNumber();
+                ui.bookImageViewPager.setCurrentItem(getBook().getCurrentPage().getPosition());
+            }
         }
     }
 
@@ -210,6 +212,11 @@ public class PageActivity extends Activity implements View.OnClickListener {
      * 私有字段类
      */
     private class Field {
+        /**
+         * 当前页码
+         */
+        int currentPageNumber;
+
         /**
          * 是否有工具条
          */

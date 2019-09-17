@@ -474,7 +474,7 @@ class BookCatalogViewAdapter extends BaseExpandableListAdapter {
 
         @Override
         public void onClick(View v) {
-            getBook().setCurrentPage(getCatalog().getPageNumber()); //重置当前显示页
+            getBook().setCurrentPage(getCatalog().getPage()); //重置当前页
             Intent intent = new Intent(getContext(), PageActivity.class);
             getContext().startActivity(intent);
         }
